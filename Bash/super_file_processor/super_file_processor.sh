@@ -425,6 +425,12 @@ function processFiles ()
 ###
 function main ()
 {
+# TODO: Attempt to move constants, variables, and filtering and validation of user input data here.
+
+
+# TODO: Attempt to move modularize from line 433 to 490 into a function. Assuming validations tests pass,
+# let main() call this function to do the work of processing files in directories (which is what main() does now).
+
     # Used to format the output of the /usr/bin/time command.
     declare -r TIME_FORMAT="CPUKernel:%S CPUUser:%U CPUTotal:%P ExecTime:%E ExecSecs:%e MaxMemKB:%M AveResMemKB:%t AveTotalMemBK:%K FilesIn:%I FilesOut:%O SignalsIn:%k"
 
@@ -439,13 +445,13 @@ function main ()
     # Directories of files to process.
     declare -Ar DIRECTORIES=(Cash Debit Credit Trade Refund)
 
-    # The number of transaction types to process.
-    declare -ir TOTAL_DIRECTORIES=${#transactions[@]} # Get the array length.
+    # The number of directories to process.
+    declare -ir TOTAL_DIRECTORIES=${#DIRECTORIES[@]} # Get the array length.
 
-    # Transaction types where all the files did not process successfully.
+    # Directories where all the files did not process successfully.
     declare -A badTransactions=()
 
-    # The number of successfully processed file sets.
+    # The number of successfully processed directories.
     declare -i processedDirectories=0
 
     # Iterate through all file sets. 
@@ -504,6 +510,7 @@ function main ()
 ###################################################################
 ###############              CONSTANTS                #############
 #############################(Limits)##############################
+# TODO: Move constants steps to main(), if possible.
 
 # The minimum files to process at a time.
 declare -ir MIN_FILES_PER_CUSTOMER_JOB=1
@@ -538,6 +545,7 @@ declare -ir MAX_DELAY_SECONDS=5
 ###################################################################
 ############### Variables for Command Line Arugments ##############
 ########################### (Defaults) ############################
+# TODO: Move variables to main(), if possible.
 
 # The uppermost parent directory for the entire taks to be done.
 declare rootInputDir="/var/local/yourApp/data/input/"
@@ -570,12 +578,13 @@ declare maxDelaySeconds=1
 # -d = The immediate parent directory (../) of all directories to process: "/var/local/<application>/data/input/"
 # -O = Order of directory processing: file name (default), oldest, newest, smallest, largest
 # -o = Order of file processing: file name (default), oldest, newest, smallest, largest
-# -q = maxFilesPerDir The max number of files to process in any one set: Default = 1000
+# -q = maxFilesPerDir The max number of files to process in any one set: Default = 100
 # -s = maxFileProcessingSeconds for each file: Default = 15
 # -c = maxProcessChecks during the processing of a file: Default = 10
 # -w = maxDelaySeconds between process checks: Default = 1
 #
 ################################################################################
+# TODO: Clean up getops algorithm.
 
 while getopts :d:t:o:S:C:D: option
 do
@@ -593,6 +602,7 @@ do
 done
 
 ################### Validate User Supplied Options & Arguments #################
+# TODO: Move validation steps (if possible) to main()
 
 if [[ ! isGoodRootInputDir $rootInputDir ]]
 then
@@ -633,10 +643,3 @@ fi
 
 
 main "$rootInputDir" "$dirOrder" "$fileOrder" $maxFilesPerDir $maxFileProcessingSeconds $maxProcessChecks $maxDelaySeconds
-
-if $?
-then
-    exit 0
-else
-    exit 8
-fi
