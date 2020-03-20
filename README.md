@@ -4,7 +4,7 @@ Code sampels in various languages.
 
 Greetings,
 
-In this respository, you will find some code examples in:
+In this respository you will find code examples in:
 
 1. Bash 
 2. Perl
