@@ -61,7 +61,7 @@ function generalEdit001 ()
 # @param string $1 Name of the file to edit.
 # @return bool
 ###
-function dogEdit001 ()
+function cashEdit001 ()
 {
     if sed -i -n -r 's/a/e/g' "$filename"                     
     then                                                                         
@@ -78,7 +78,7 @@ function dogEdit001 ()
 # @param string $1 Name of the file to edit.
 # @return bool
 ###
-function dogEdit002 ()
+function cashEdit002 ()
 {
     if sed -i -n -r 's/i/o/g' "$filename"                     
     then                                                                         
@@ -95,7 +95,7 @@ function dogEdit002 ()
 # @param string $1 Name of the file to edit.
 # @return bool
 ###
-function dogEdit003 ()
+function cashEdit003 ()
 {
     if sed -i -n -r 's/u/y/g' "$filename"                     
     then                                                                         
@@ -105,7 +105,7 @@ function dogEdit003 ()
     fi       
 }
 
-function processDog ()
+function processCash ()
 {
     declare -ir GOOD_TRANSACTION=3
     declare -i numEdits=0
@@ -126,25 +126,25 @@ function processDog ()
         return 1                  
     fi
 
-    if dogEdit001 "$filename"
+    if cashEdit001 "$filename"
     then                                                                         
         (( numEdits++ ))
     else
-        return 1                  
+        return 2
     fi
 
     if dogEdit002 "$filename"
     then                                                                         
         (( numEdits++ ))
     else
-        return 1                  
+        return 3
     fi
 
     if dogEdit003 "$filename"
     then                                                                         
         (( numEdits++ ))
     else
-        return 1                  
+        return 4
     fi                                                
 
     sed -n 's/a/s/' <& 
@@ -154,72 +154,24 @@ function processDog ()
     trap - INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
 }
 
-function processCat ()
+function processCredit ()
 {
-    trap 'exec >&-' HUP ILL BUS ABRT SEGV PIPE TERM
-    trap '' INT QUIT
-
-    declare -r INPUT_FILE="$1"
-    declare -r OUTPUT_FILE="$2"
-
-    exec > "$OUTPUT_FILE"
-
-    sed -n 's/a/s/' "$INPUT_FILE" 
-    
-    exec >&-
-
-    trap - INT QUIT
+    :
 }
 
-function processBird ()
+function processDebit ()
 {
-    trap 'exec >&-' HUP ILL BUS ABRT SEGV PIPE TERM
-    trap '' INT QUIT
-
-    declare -r INPUT_FILE="$1"
-    declare -r OUTPUT_FILE="$2"
-
-    exec > "$OUTPUT_FILE"
-
-    sed -n 's/a/s/' "$INPUT_FILE" 
-    
-    exec >&-
-
-    trap - INT QUIT
+    :
 }
 
-function processFish ()
+function processTrade ()
 {
-    trap 'exec >&-' HUP ILL BUS ABRT SEGV PIPE TERM
-    trap '' INT QUIT
-
-    declare -r INPUT_FILE="$1"
-    declare -r OUTPUT_FILE="$2"
-
-    exec > "$OUTPUT_FILE"
-
-    sed -n 's/a/s/' "$INPUT_FILE" 
-    
-    exec >&-
-
-    trap - INT QUIT
+    :
 }
 
-function processFrogFile ()
+function processRefund ()
 {
-    trap 'exec >&-' HUP ILL BUS ABRT SEGV PIPE TERM
-    trap '' INT QUIT
-
-    declare -r INPUT_FILE="$1"
-    declare -r OUTPUT_FILE="$2"
-
-    exec > "$OUTPUT_FILE"
-
-    sed -n 's/a/s/' "$INPUT_FILE" 
-    
-    exec >&-
-
-    trap - INT QUIT
+    :
 }
 
 ##################################################################
