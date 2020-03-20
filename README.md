@@ -1,5 +1,5 @@
 # Polyglot
-Code sampels in various languages.
+Code samples in various languages.
 
 
 Greetings,
