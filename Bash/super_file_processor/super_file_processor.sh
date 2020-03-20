@@ -1,4 +1,6 @@
-#!/bin/ksh
+#!/bin/bash
+
+# Note: Totally raw and unfinished, but close. Needs some refactoring.
 
 ##################################################################
 #                        Handle Signals                          #
