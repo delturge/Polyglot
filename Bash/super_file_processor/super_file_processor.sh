@@ -105,7 +105,7 @@ function dogEdit003 ()
     fi       
 }
 
-function processDogFile ()
+function processDog ()
 {
     declare -ir GOOD_TRANSACTION=3
     declare -i numEdits=0
@@ -154,7 +154,7 @@ function processDogFile ()
     trap - INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
 }
 
-function processCatFile ()
+function processCat ()
 {
     trap 'exec >&-' HUP ILL BUS ABRT SEGV PIPE TERM
     trap '' INT QUIT
@@ -171,7 +171,7 @@ function processCatFile ()
     trap - INT QUIT
 }
 
-function processBirdFile ()
+function processBird ()
 {
     trap 'exec >&-' HUP ILL BUS ABRT SEGV PIPE TERM
     trap '' INT QUIT
@@ -188,7 +188,7 @@ function processBirdFile ()
     trap - INT QUIT
 }
 
-function processFishFile ()
+function processFish ()
 {
     trap 'exec >&-' HUP ILL BUS ABRT SEGV PIPE TERM
     trap '' INT QUIT
@@ -442,23 +442,23 @@ function main ()
     declare -ir MAX_PROCESS_CHECKS=$6
     declare -ir MAX_DELAY_SECONDS=$7
 
-    # Directories of files to process.
-    declare -Ar DIRECTORIES=(Cash Debit Credit Trade Refund)
+    # Types of files to process.
+    declare -Ar FILE_TYPES=(Cash Debit Credit Trade Refund)
 
     # The number of directories to process.
-    declare -ir TOTAL_DIRECTORIES=${#DIRECTORIES[@]} # Get the array length.
+    declare -ir _FILE_TYPES${#FILE_TYPES[@]} # Get the array length.
 
     # Directories where all the files did not process successfully.
-    declare -A badTransactions=()
+    declare -A badProcessing=()
 
     # The number of successfully processed directories.
     declare -i processedDirectories=0
 
     # Iterate through all file sets. 
-    for fileSet in "${DIRECTORIES[@]}"
+    for fileType in "${FILE_TYPES[@]}"
     do
         currentPid=$$
-        fileProcessingFunction="process${fileSet}" # Build the name of the set processing function.
+        fileProcessingFunction="process${fileType}" # Build the name of the directory processing function.
 
         # Add log entry header.
         cat <<- EOF
@@ -510,7 +510,7 @@ function main ()
 ###################################################################
 ###############              CONSTANTS                #############
 #############################(Limits)##############################
-# TODO: Move constants steps to main(), if possible.
+# TODO: Move constants to main(), if possible.
 
 # The minimum files to process at a time.
 declare -ir MIN_FILES_PER_CUSTOMER_JOB=1
@@ -584,7 +584,7 @@ declare maxDelaySeconds=1
 # -w = maxDelaySeconds between process checks: Default = 1
 #
 ################################################################################
-# TODO: Clean up getops algorithm.
+# TODO: Clean up getops algorithm. Add filter step before assigning the value of $OPTARG
 
 while getopts :d:t:o:S:C:D: option
 do
@@ -640,6 +640,5 @@ then
 fi
 
 ################################################################################
-
 
 main "$rootInputDir" "$dirOrder" "$fileOrder" $maxFilesPerDir $maxFileProcessingSeconds $maxProcessChecks $maxDelaySeconds
