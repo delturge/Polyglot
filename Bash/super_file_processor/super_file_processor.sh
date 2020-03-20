@@ -110,14 +110,10 @@ function processCash ()
     declare -ir GOOD_TRANSACTION=3
     declare -i numEdits=0
 
-    trap 'exec >&-' 0
     trap '' INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
 
     declare -r INPUT_FILE="$1"
     declare -r OUTPUT_FILE="$2"
-
-    exec > "$OUTPUT_FILE"
-    exec < "$INPUT_FILE"
 
     if generalEdit001 "$filename"
     then                                                                         
@@ -146,10 +142,6 @@ function processCash ()
     else
         return 4
     fi                                                
-
-    sed -n 's/a/s/' <& 
-    
-    exec >&-
 
     trap - INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
 }
