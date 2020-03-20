@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Note: Totally raw and unfinished, but close. Needs some refactoring.
+# Always read shell scripts bottom to top.
 
 ##################################################################
 #                        Handle Signals                          #
