@@ -501,7 +501,7 @@ function main ()
     ###################################################################
 
     ################################################################################
-    #                         Command Line Option Lengend
+    #                         Command Line Option Legend
     #
     # -r = The immediate parent directory (../) of all directories to process: "/var/local/<application>/data/input/"
     # -K = Directory sort key: mtime, size, or name
