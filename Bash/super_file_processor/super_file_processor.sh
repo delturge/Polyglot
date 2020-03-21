@@ -22,6 +22,8 @@ then
     # Try to create the error log.
     if [[ ! touch "$appErrorLog" ]]
     then
+        echo -e "$(whoami) is unable to create a log file.\nSetup a log file in ${appErrorLog}." 1>&2
+        logger -p "user.err" "$(whoami) is unable to create a log file for super_file_processor. Setup a log file in $appErrorLog."
         exit 1
     fi
 fi
@@ -38,160 +40,13 @@ fi
 
 . ../library/Base/Base.sh
 . ../classes/SignalHandler.sh
-. ../classes/FileProcessingLogger
-. ../classes/Validators/CommandValidator
+. ../classes/FileProcessingLogger.sh
+. ../classes/Validators/CommandValidator.sh
+. ../classes/FileEditor.sh
 
 ################################################################################
 ################################################################################
 ################################################################################
-
-
-################### APPLICATION HELPER FUNCTIONS #################
-
-
-##################################################################
-#            Functions that process each type of file.           #
-##################################################################
-
-# Note: The sed command returns zero, even if it does not change anything.
-
-##
-# Makes an edit to all file types.
-# Changes blah, to foo bar.
-#
-# @param string $1 Name of the file to edit.
-# @return bool
-###
-function generalEdit001 ()
-{
-    declare -r FILENAME=$1
-
-    if sed -i -n -r 's/s/r/g' "$FILENAME"                     
-    then                                                                         
-        return 0        
-    else                                                                   
-        return 1                                        
-    fi       
-}
-
-##
-# The 1st edit for cash files.
-# Changes blah, to foo bar.
-#
-# @param string $1 Name of the file to edit.
-# @return bool
-###
-function cashEdit001 ()
-{
-    declare -r FILENAME=$1
-    
-    if sed -i -n -r 's/a/e/g' "$FILENAME"                     
-    then                                                                         
-        return 0        
-    else                                                                   
-        return 1                                        
-    fi       
-}
-
-##
-# The 2nd edit for cash files.
-# Changes blah, to foo bar.
-#
-# @param string $1 Name of the file to edit.
-# @return bool
-###
-function cashEdit002 ()
-{
-    declare -r FILENAME=$1
-
-    if sed -i -n -r 's/i/o/g' "$FILENAME"                     
-    then                                                                         
-        return 0        
-    else                                                                   
-        return 1                                        
-    fi       
-}
-
-##
-# The 3rd edit for cash files.
-# Changes blah, to foo bar.
-#
-# @param string $1 Name of the file to edit.
-# @return bool
-###
-function cashEdit003 ()
-{
-    declare -r FILENAME=$1
-    
-    if sed -i -n -r 's/u/y/g' "$FILENAME"                     
-    then                                                                         
-        return 0        
-    else                                                                   
-        return 1                                        
-    fi       
-}
-
-function processCash ()
-{
-    declare -ir GOOD_TRANSACTION=4
-    declare -r FILENAME=$1
-
-    declare -i numEdits=0
-
-    # Attempt to prevent signals from interrupting the required edits.
-    trap '' INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
-
-    if generalEdit001 "$FILENAME"
-    then                                            
-        (( numEdits++ ))
-    else
-        return 1                  
-    fi
-
-    if cashEdit001 "$FILENAME"
-    then                                                  
-        (( numEdits++ ))
-    else
-        return 2
-    fi
-
-    if dogEdit002 "$FILENAME"
-    then                                                   
-        (( numEdits++ ))
-    else
-        return 3
-    fi
-
-    if dogEdit003 "$FILENAME"
-    then                                        
-        (( numEdits++ ))
-    else
-        return 4
-    fi
-
-    # Restore normal signal operations.
-    trap - INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
-}
-
-function processCredit ()
-{
-    :
-}
-
-function processDebit ()
-{
-    :
-}
-
-function processTrade ()
-{
-    :
-}
-
-function processRefund ()
-{
-    :
-}
 
 ##################################################################
 #                      Main Application Logic                    #
