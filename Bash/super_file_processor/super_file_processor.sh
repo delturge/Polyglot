@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Note: Totally raw and unfinished, but close. Needs some refactoring.
-# Always read shell scripts bottom to top.
+# Always read shell scripts the bottom to the top.
 
 ##################################################################
 #                        Handle Signals                          #
@@ -415,13 +415,13 @@ function main ()
         targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"
 
         # Add log entry header.
-        cat <<-EOF
+        cat <<- EOF 1>>&2
         ==========
         JOB START: 
         $(getDateTime) "$targetDir" $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP
         $(getProcessReport $CURRENT_PID)
         ----------
-        EOF 1>>&2
+        EOF
 
         # The /usr/bin/time command will add the log body.
         # processFiles () will iterate through the files of a directory.
@@ -437,12 +437,12 @@ function main ()
         fi
 
         # Add log entry footer.
-        cat <<-EOF
+        cat <<- EOF 1>>&2
         $(getDateTime) $targetDir $(hostname) $(hostname -i | awk '{print $2}')
         $(getProcessReport $CURRENT_PID)
         JOB END: 
         ==========
-        EOF 1>>&2
+        EOF
     done
 
     if (( processedDirs == DIRECTORIES_LENGTH ))
