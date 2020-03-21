@@ -442,14 +442,13 @@ function main ()
         targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"
 
         # Add log entry header.
-        cat <<- EOF 1>>&2
+        cat << EOF 1>>&2
         ==========
         JOB START: 
         $(getDateTime) "$targetDir" $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP
         $(getProcessReport $CURRENT_PID)
         ----------
-        EOF
-
+EOF
         # The /usr/bin/time command will add the log body.
         # processFiles () will iterate through the files of a directory.
         
@@ -464,12 +463,12 @@ function main ()
         fi
 
         # Add log entry footer.
-        cat <<- EOF 1>>&2
+        cat << EOF 1>>&2
         $(getDateTime) $targetDir $(hostname) $(hostname -i | awk '{print $2}')
         $(getProcessReport $CURRENT_PID)
         JOB END: 
         ==========
-        EOF
+EOF
     done
 
     if (( processedDirs == DIRECTORIES_LENGTH ))
