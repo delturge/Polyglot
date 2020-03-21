@@ -265,7 +265,7 @@ function stopProcessingFile ()
 
 ##
 # Move a file that has taken to long to process to the
-# "blah/blah/blah/errors/${fileTypeDir}/" directory.
+# "blah/blah/output/errors/${fileTypeDir}/" directory.
 #
 # @author Anthony E. Rutledge
 # @version 1.0
@@ -295,12 +295,50 @@ function moveBadFile ()
         mkdir -p "$ERROR_DIR"
     fi
 
-    if [[ mv -f $ABSOLUTE_FILENAME $ERROR_DIR ]] && [[ isFile $newErrorFilename  ]]
+    if [[ mv -f $ABSOLUTE_FILENAME $ERROR_DIR ]] && [[ isFile $newErrorFilename  ]] #--> library/Datatypes/File.isFile
     then
         logToApp "notice" "$GOOD_MESSAGE"
     else
         logToApp "alert" "$BAD_MESSAGE"
         # Send alert or message admin.
+    fi
+}
+
+
+##
+# Move a file that has been successfully processed to the
+# "blah/blah/output/finished/${fileTypeDir}/" directory.
+#
+# @author Anthony E. Rutledge
+# @version 1.0
+# @copyright (c) 2020, Anthony E. Rutledge
+#
+# @param string $1 The parent process ID
+# @param string $2 The process ID
+# @param string $3 The absolute path name of the file being processed.
+#
+# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
+###
+function moveGoodFile ()
+{
+    declare -r PPID=$1
+    declare -r PID=$2
+    declare -r ABSOLUTE_FILENAME="$3"
+    declare -r FINISHED_DIR="$4"
+    
+    declare -r baseFilename$(basename $ABSOLUTE_FILENAME)
+    declare -r newFinishedFilename="${ERROR_DIR}${baseFilename}"
+    
+    declare -r BAD_MESSAGE="Alert: Unable to move $ABSOLUTE_FILENAME to its finished directory! PID=${PID} PPID=${PPID}"
+
+    if [[ ! isDirectory "$FINISHED_DIR" ]]  #--> library/Datatypes/File.isDirectory
+    then
+        mkdir -p "$FINISHED_DIR"
+    fi
+
+    if [[ ! mv -f $ABSOLUTE_FILENAME $FINISHED_DIR ]] || [[ ! isFile $newFinishedFilename ]] #--> library/Datatypes/File.isFile
+    then
+        logToApp "alert" "$BAD_MESSAGE"
     fi
 }
 
@@ -359,10 +397,10 @@ function processFiles ()
         $FILE_PROCESSING_FUNCTION "$filename" &
         lastJobPid=$!
 
-        # Monitor file processing in the foreground.
+        # Monitor file processing in the foreground. #--> library/Entities/Process.limitProcessRuntime
         if limitProcessRuntime $lastJobPid $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS
         then
-            mv -f $filename $FINISHED_DIR
+            moveGoodFile $CURRENT_PID $lastJobPid $absoluteFilePath $FINISHED_DIR
         else
             if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid $absoluteFilePath
             then
