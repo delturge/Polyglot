@@ -75,7 +75,7 @@ function generalEdit001 ()
 }
 
 ##
-# The 1st edit for dog files.
+# The 1st edit for cash files.
 # Changes blah, to foo bar.
 #
 # @param string $1 Name of the file to edit.
@@ -94,7 +94,7 @@ function cashEdit001 ()
 }
 
 ##
-# The 2nd edit for dog files.
+# The 2nd edit for cash files.
 # Changes blah, to foo bar.
 #
 # @param string $1 Name of the file to edit.
@@ -113,7 +113,7 @@ function cashEdit002 ()
 }
 
 ##
-# The 3rd edit for dog files.
+# The 3rd edit for cash files.
 # Changes blah, to foo bar.
 #
 # @param string $1 Name of the file to edit.
@@ -221,11 +221,11 @@ function checkFileProcessingStatus ()
 
     if isProcess $lastJobPid
     then
-        logToApp "warning" $BAD_MESSAGE
+        logToApp "warning" "$BAD_MESSAGE"
         # Send alert or message to admin.
         return 0
     else
-        logToApp "info" $GOOD_MESSAGE
+        logToApp "info" "$GOOD_MESSAGE"
     fi
     
     return 1
@@ -254,9 +254,9 @@ function stopProcessingFile ()
 
     if killPidFamily $PID
     then
-        logToApp "notice" $GOOD_MESSAGE
+        logToApp "notice" "$GOOD_MESSAGE"
     else
-        logToApp "alert" $BAD_MESSAGE
+        logToApp "alert" "$BAD_MESSAGE"
         # Send alert or message to admin.
     fi
 }
@@ -285,9 +285,9 @@ function moveBadFile ()
 
     if mv -f $FILENAME $ERROR_DIR
     then
-        logToApp "notice" $PPID $PID $FILENAME $GOOD_MESSAGE
+        logToApp "notice" "$GOOD_MESSAGE"
     else
-        logToApp "alert" $BAD_MESSAGE
+        logToApp "alert" "$BAD_MESSAGE"
         # Send alert or message admin.
     fi
 }
@@ -538,47 +538,7 @@ EOF
 function main ()
 {
     ###################################################################
-    ################ PROCESSING CONSTRAINTS (CONSTANTS) ###############
-    #############################(Limits)##############################
-
-    # --- File Count --- #
-
-    # The minimum files to process at a time.
-    declare -ir MIN_FILES_PER_CUSTOMER_JOB=1
-
-    # The maximum files to process in one customer directory (..../input/sorted/<customer>) at a time.
-    declare -ir MAX_FILES_PER_CUSTOMER_JOB=1000
-    # ----------------------------
-
-    # --- Processing Time --- #
-
-    # The minimum time allowed to process a file.
-    declare -ir MIN_FILE_PROCESSING_SECONDS=1
-
-    # The maximum time allowed to process a file.
-    declare -ir MAX_FILE_PROCESSING_SECONDS=30
-    # ----------------------------
-
-    # --- Process Polling --- #
-
-    # The minimum times a process check might occur per file processed.
-    declare -ir MIN_PROCESS_CHECKS=10
-
-    # The maximum times a process check can occur per file processed.
-    declare -ir MAX_PROCESS_CHECKS=20
-    # ----------------------------
-
-    # --- Polling Interval --- #
-
-    # The minimum possible delay between process checks.
-    declare -ir MIN_DELAY_SECONDS=1
-
-    # The maximum possible delay between process checks.
-    declare -ir MAX_DELAY_SECONDS=5
-    # ----------------------------
-
-    ###################################################################
-    ############### Variables for Command Line Arugments ##############
+    ############## Variables for Command Line User Input ##############
     ########################### (Defaults) ############################
 
     # --- Where to Start! --- #
@@ -635,11 +595,11 @@ function main ()
     # -w = maxDelaySeconds between process checks: Default = 1
     #
     ################################################################################
-    # TODO: Clean up getops algorithm. Add filter step before assigning the value of $OPTARG
+    # TODO: Add filter step before assigning the value of $OPTARG
     
     declare OPTIND
 
-    while getopts :d:t:o:S:C:D: option
+    while getopts :r:K:O:k:o:q:s:c:d: option
     do
         case "$option" in:
             r) rootInputDir=$OPTARG
@@ -656,56 +616,30 @@ function main ()
         esac
     done
 
-    ################### Validate User Supplied Options & Arguments #################
+    declare -Ar USER_INPUT=(
+    [rootInputDir]=$rootInputDir
+    [dirSortKey]=$dirSortKey
+    [dirSortOrder]=$dirSortOrder
+    [fileSortKey]=$fileSortKey
+    [fileSortOrder]=$fileSortOrder
+    [maxFilesPerDir]=$maxFilesPerDir
+    [maxFileProcessingSeconds]=$maxFileProcessingSeconds
+    [maxProcessChecks]=$maxProcessChecks
+    [maxDelaySeconds]=$maxDelaySeconds)
 
-    if [[ ! isRootInputDir $rootInputDir ]]
+    if validateCommandInput "${USER_INPUT[@]}"
     then
-        exit 1
-    fi
-
-    if [[ ! isDirKey $dirKey ]]
-    then
-        exit 2
-    fi
-
-    if [[ ! isDirOrder $dirOrder ]]
-    then
-        exit 3
+        # This could be made iterative, allowing one to reach
+        # maxFilesPerDir, then come back to a directory after all of
+        # the other kinds of files have been processed.
+        # It depends on the scenario. You can also just run
+        # super_file_processor iteratively, too.
+        processDirectories "${USER_INPUT[@]}"
+        exit 0
     fi
     
-    if [[ ! isFileKey $fileKey ]]
-    then
-        exit 4
-    fi
-
-    if [[ ! isFileOrder $fileOrder ]]
-    then
-        exit 5
-    fi
-
-    if [[ ! isGoodMaxFilesPerDir $MIN_FILES_PER_CUSTOMER_DIR $MAX_FILES_PER_CUSTOMER_DIR $maxFilesPerDir ]]
-    then
-        exit 6
-    fi
-
-    if [[ ! isGoodMaxFileProcessingSeconds $MIN_FILE_PROCESSING_SECONDS $MAX_FILE_PROCESSING_SECONDS $maxFileProcessingSeconds ]]
-    then
-        exit 7
-    fi
-
-    if [[ ! isGoodMaxProcessChecks $MIN_PROCESS_CHECKS $MAX_PROCESS_CHECKS $maxProcessChecks ]]
-    then
-        exit 8
-    fi
-
-    if [[ ! isGoodMaxDelaySeconds $MIN_DELAY_SECONDS $MAX_DELAY_SECONDS $maxDelaySeconds ]]
-    then
-        exit 9
-    fi
-
-    ################################################################################
-    
-    processDirectories "$rootInputDir" "$dirSortKey" "$dirSortOrder" "$fileSortKey" "$fileSortOrder" $ma"$fileSortKey"xFilesPerDir $maxFileProcessingSeconds $maxProcessChecks $maxDelaySeconds
+    logToSystem "notice" "super_file_processor was invoked with invalid values for the arguments!"
+    exit 1
 }
 
 ################################################################################
