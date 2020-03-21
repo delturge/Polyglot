@@ -488,53 +488,73 @@ function main ()
 ## In progress: Refactorization of global area (to end of file) on-going: 3/20/2020
 
 ###################################################################
-###############              CONSTANTS                #############
+################## PROCESSING CONSTRAINTS (CONSTANTS) #############
 #############################(Limits)##############################
 # TODO: Move constants to main(), if possible.
+
+# --- File Count --- #
 
 # The minimum files to process at a time.
 declare -ir MIN_FILES_PER_CUSTOMER_JOB=1
 
 # The maximum files to process in one customer directory (..../input/sorted/<customer>) at a time.
 declare -ir MAX_FILES_PER_CUSTOMER_JOB=1000
+# ----------------------------
 
-#----------
+# --- Processing Time --- #
 
 # The minimum time allowed to process a file.
 declare -ir MIN_FILE_PROCESSING_SECONDS=1
 
 # The maximum time allowed to process a file.
 declare -ir MAX_FILE_PROCESSING_SECONDS=30
+# ----------------------------
 
-#----------
+# --- Process Polling --- #
 
 # The minimum times a process check might occur per file processed.
 declare -ir MIN_PROCESS_CHECKS=10
 
 # The maximum times a process check can occur per file processed.
 declare -ir MAX_PROCESS_CHECKS=20
+# ----------------------------
 
-#----------
+# --- Polling Interval --- #
 
 # The minimum possible delay between process checks.
 declare -ir MIN_DELAY_SECONDS=1
 
 # The maximum possible delay between process checks.
 declare -ir MAX_DELAY_SECONDS=5
+# ----------------------------
 
 ###################################################################
 ############### Variables for Command Line Arugments ##############
 ########################### (Defaults) ############################
 # TODO: Move variables to main(), if possible.
 
+# --- Where to Start! --- #
+
 # The uppermost parent directory for the entire taks to be done.
 declare rootInputDir="/var/local/yourApp/data/input/"
+# ----------------------------
 
-# The order to process the customer directories under ..../input/sorted/
-declare dirOrder="mtime"
+# --- Sorting Options --- #
+
+# The field in a listing (ls) upon which to sort directories.
+declare dirSortKey="mtime"
+
+# The order to process the customer directories under .../input/sorted/
+declare dirSortOrder="asc"
+
+# The field in a listing (ls) upon which to sort files.
+declare fileSortKey="mtime"
 
 # The order to process the customer files under ..../input/sorted/<customer>)
-declare fileOrder="mtime"
+declare fileSortOrder="asc"
+# ----------------------------
+
+# --- Processing Limits --- #
 
 # The maximum number of files to process in a customer folder at a time.
 declare maxFilesPerDir=100
@@ -547,6 +567,7 @@ declare maxProcessChecks=10
 
 # The delay in seconds between process checks.
 declare maxDelaySeconds=1
+# ----------------------------
 
 ###################################################################
 ###################################################################
