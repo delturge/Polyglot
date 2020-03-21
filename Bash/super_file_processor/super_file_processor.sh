@@ -53,6 +53,8 @@ fi
 #            Functions that process each type of file.           #
 ##################################################################
 
+# Note: The sed command returns zero, even if it does not change anything.
+
 ##
 # Makes an edit to all file types.
 # Changes blah, to foo bar.
@@ -64,7 +66,7 @@ function generalEdit001 ()
 {
     declare -r FILENAME=$1
 
-    if sed -i -n -r 's/s/r/g' "$filename"                     
+    if sed -i -n -r 's/s/r/g' "$FILENAME"                     
     then                                                                         
         return 0        
     else                                                                   
@@ -83,7 +85,7 @@ function cashEdit001 ()
 {
     declare -r FILENAME=$1
     
-    if sed -i -n -r 's/a/e/g' "$filename"                     
+    if sed -i -n -r 's/a/e/g' "$FILENAME"                     
     then                                                                         
         return 0        
     else                                                                   
@@ -102,7 +104,7 @@ function cashEdit002 ()
 {
     declare -r FILENAME=$1
 
-    if sed -i -n -r 's/i/o/g' "$filename"                     
+    if sed -i -n -r 's/i/o/g' "$FILENAME"                     
     then                                                                         
         return 0        
     else                                                                   
@@ -121,7 +123,7 @@ function cashEdit003 ()
 {
     declare -r FILENAME=$1
     
-    if sed -i -n -r 's/u/y/g' "$filename"                     
+    if sed -i -n -r 's/u/y/g' "$FILENAME"                     
     then                                                                         
         return 0        
     else                                                                   
