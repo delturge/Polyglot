@@ -4,26 +4,42 @@
 # Always read shell scripts the bottom to the top.
 
 ##################################################################
-#                        Handle Signals                          #
+#                     Setup Signal Handling                      #
 ##################################################################
 
-# Close file descriptor 2 upon script exit.
+# Set stderr back to file descriptor number two upon exit.
 trap 'exec 2>/dev/stderr; exit 1' 0
 
 ##################################################################
-#                  Open File Descriptors                         #
+#                  Open Error Log File Descriptor                #
 ##################################################################
 
-# Assign file descriptor 2 to the application log: /var/log/animals/error.log
-exec 2>/var/log/animals/error.log 
+declare -r appErrorLog="/var/log/yourApp/error.log"
+
+# Check to see if the error log is present.
+if [[ ! -f "${appErrorLog}" ]]
+then
+    # Try to create the error log.
+    if [[ ! touch "$appErrorLog" ]]
+    then
+        exit 1
+    fi
+fi
+
+# Assign file descriptor number 2 to the application log: /var/log/<yourApp>/error.log
+if [[ ! exec 2>> "${appErrorLog}" ]]
+then
+    exit 2
+fi
 
 ##################################################################
-#                    Load the libraries                          #
+#                        Load Libraries                          #
 ##################################################################
 
 . ../library/Base/Base.sh
 . ../classes/SignalHandler.sh
-. ../classes/FileProcessorLogger
+. ../classes/FileProcessingLogger
+. ../classes/Validators/CommandValidator
 
 ################################################################################
 ################################################################################
@@ -46,6 +62,8 @@ exec 2>/var/log/animals/error.log
 ###
 function generalEdit001 ()
 {
+    declare -r FILENAME=$1
+
     if sed -i -n -r 's/s/r/g' "$filename"                     
     then                                                                         
         return 0        
@@ -63,6 +81,8 @@ function generalEdit001 ()
 ###
 function cashEdit001 ()
 {
+    declare -r FILENAME=$1
+    
     if sed -i -n -r 's/a/e/g' "$filename"                     
     then                                                                         
         return 0        
@@ -80,6 +100,8 @@ function cashEdit001 ()
 ###
 function cashEdit002 ()
 {
+    declare -r FILENAME=$1
+
     if sed -i -n -r 's/i/o/g' "$filename"                     
     then                                                                         
         return 0        
@@ -97,6 +119,8 @@ function cashEdit002 ()
 ###
 function cashEdit003 ()
 {
+    declare -r FILENAME=$1
+    
     if sed -i -n -r 's/u/y/g' "$filename"                     
     then                                                                         
         return 0        
@@ -108,41 +132,42 @@ function cashEdit003 ()
 function processCash ()
 {
     declare -ir GOOD_TRANSACTION=4
+    declare -r FILENAME=$1
+
     declare -i numEdits=0
 
+    # Attempt to prevent signals from interrupting the required edits.
     trap '' INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
 
-    declare -r INPUT_FILE="$1"
-    declare -r OUTPUT_FILE="$2"
-
-    if generalEdit001 "$filename"
+    if generalEdit001 "$FILENAME"
     then                                            
         (( numEdits++ ))
     else
         return 1                  
     fi
 
-    if cashEdit001 "$filename"
+    if cashEdit001 "$FILENAME"
     then                                                  
         (( numEdits++ ))
     else
         return 2
     fi
 
-    if dogEdit002 "$filename"
+    if dogEdit002 "$FILENAME"
     then                                                   
         (( numEdits++ ))
     else
         return 3
     fi
 
-    if dogEdit003 "$filename"
+    if dogEdit003 "$FILENAME"
     then                                        
         (( numEdits++ ))
     else
         return 4
     fi
 
+    # Restore normal signal operations.
     trap - INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
 }
 
