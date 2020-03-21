@@ -216,6 +216,7 @@ function checkFileProcessingStatus ()
     declare -r PPID=$1
     declare -r PID=$2
     declare -r FILENAME="$3"
+    
     declare -r BAD_MESSAGE="Process ${PID} of parent ${PPID} is taking too long to process ${FILENAME}!"
     declare -r GOOD_MESSAGE="Process ${PID} of parent ${PPID} finished processing file ${FILENAME}. All good."
 
@@ -249,6 +250,7 @@ function stopProcessingFile ()
     declare -r PPID=$1
     declare -r PID=$2
     declare -r FILENAME="$3"
+    
     declare -r GOOD_MESSAGE="Intentionally killed child process ${PID} of parent ${PPID} while processing ${FILENAME}!"
     declare -r BAD_MESSAGE="Unable to kill child process ${PID} of parent ${PPID}. May still be processing ${FILENAME}!"
 
@@ -279,13 +281,21 @@ function moveBadFile ()
 {
     declare -r PPID=$1
     declare -r PID=$2
-    declare -r FILENAME="$3"
-    declare -r ERROR_DIR=$(echo $FILENAME | sed -n s//errors/)
-    declare -r GOOD_MESSAGE="Notice: Moved file ${filename} to its error directory! PID=${PID} PPID=${PPID}"
-    declare -r BAD_MESSAGE="Alert: Unable to move ${filename} to its error directory! PID=${PID} PPID=${PPID}"
+    declare -r ABSOLUTE_FILENAME="$3"
+    declare -r ERROR_DIR="$4"
+    
+    declare -r baseFilename$(basename $ABSOLUTE_FILENAME)
+    declare -r newErrorFilename="${ERROR_DIR}${baseFilename}"
+    
+    declare -r GOOD_MESSAGE="Notice: Moved file $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
+    declare -r BAD_MESSAGE="Alert: Unable to move $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
 
+    if [[ ! isDirectory "$ERROR_DIR" ]]  #--> library/Datatypes/File.isDirectory
+    then
+        mkdir -p "$ERROR_DIR"
+    fi
 
-    if mv -f $FILENAME $ERROR_DIR
+    if [[ mv -f $ABSOLUTE_FILENAME $ERROR_DIR ]] && [[ isFile $newErrorFilename  ]]
     then
         logToApp "notice" "$GOOD_MESSAGE"
     else
