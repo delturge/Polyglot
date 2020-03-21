@@ -363,29 +363,11 @@ function processFiles ()
 }
 
 ##
+# Processes all of the target directories, not the files there in.
+#
 # @author Anthony E. Rutledge
 # @version 1.0
 # @copyright (c) 2020, Anthony E. Rutledge
-#
-# Processes several directories of files quasi-transactionally with sed.
-#
-# 1) Processes each file in the background.
-# 
-# 2) Limits the processing time of each file processing process with a
-#    monitoring process.
-# 
-# 3) Traps process killing signals (HUP, INT, QUIT, TERM, ...) to discourage
-#    incomplete file writes.
-#
-# 4) Logs errors to
-#       a) Application log
-#       b) System log
-#
-# 5) Able to send e-mail to notify about exceptional situations.
-#
-# 6) Maintains per-directory transaction manifest:
-#
-# 7) Cleans-up the environment before the process dies, unless SIGKILL (9) is issued.
 #
 # @param string $1 The directory location of where to start from.
 # @param string $2 The field in a listing (ls) to sort directories: mtime, size, or name.
@@ -397,14 +379,10 @@ function processFiles ()
 # @param int    $8 The maximum process checks allowed before the process gets killed.
 # @param int    $9 The maximum amound of time, in seconds, between process checks.
 #
-# @return bool Returns 0 if all files were processed. Otherwise, non-zero is returned.
+# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
 ###
-function main ()
+function processDirectories ()
 {
-# TODO: Move constants, variables, and filtering and validation of user input from global area to here.
-# TODO: Move main's current logic into a function.
-# TODO: Let main() call this new function to do the work of iterating over directories (which is what main() does now).
-
     # --- Input Related Constants --- #
 
     # Where file types live in sub-directories. 
@@ -520,163 +498,216 @@ EOF
     return 3
 }
 
-################################################################################
-
-## In progress: Refactorization of global area (to end of file) on-going: 3/20/2020
-
-###################################################################
-################## PROCESSING CONSTRAINTS (CONSTANTS) #############
-#############################(Limits)##############################
-# TODO: Move constants to main(), if possible.
-
-# --- File Count --- #
-
-# The minimum files to process at a time.
-declare -ir MIN_FILES_PER_CUSTOMER_JOB=1
-
-# The maximum files to process in one customer directory (..../input/sorted/<customer>) at a time.
-declare -ir MAX_FILES_PER_CUSTOMER_JOB=1000
-# ----------------------------
-
-# --- Processing Time --- #
-
-# The minimum time allowed to process a file.
-declare -ir MIN_FILE_PROCESSING_SECONDS=1
-
-# The maximum time allowed to process a file.
-declare -ir MAX_FILE_PROCESSING_SECONDS=30
-# ----------------------------
-
-# --- Process Polling --- #
-
-# The minimum times a process check might occur per file processed.
-declare -ir MIN_PROCESS_CHECKS=10
-
-# The maximum times a process check can occur per file processed.
-declare -ir MAX_PROCESS_CHECKS=20
-# ----------------------------
-
-# --- Polling Interval --- #
-
-# The minimum possible delay between process checks.
-declare -ir MIN_DELAY_SECONDS=1
-
-# The maximum possible delay between process checks.
-declare -ir MAX_DELAY_SECONDS=5
-# ----------------------------
-
-###################################################################
-############### Variables for Command Line Arugments ##############
-########################### (Defaults) ############################
-# TODO: Move variables to main(), if possible.
-
-# --- Where to Start! --- #
-
-# The uppermost parent directory for the entire taks to be done.
-declare rootInputDir="/var/local/yourApp/data/input/"
-# ----------------------------
-
-# --- Sorting Options --- #
-
-# The field in a listing (ls) upon which to sort directories.
-declare dirSortKey="mtime"
-
-# The order to process the customer directories under .../input/sorted/
-declare dirSortOrder="asc"
-
-# The field in a listing (ls) upon which to sort files.
-declare fileSortKey="mtime"
-
-# The order to process the customer files under ..../input/sorted/<customer>)
-declare fileSortOrder="asc"
-# ----------------------------
-
-# --- Processing Limits --- #
-
-# The maximum number of files to process in a customer folder at a time.
-declare maxFilesPerDir=100
-
-# The maximum number of seconds to attempt processing a file.
-declare maxFileProcessingSeconds=15
-
-# The maximum number of times allowed to check to see if process has finished.
-declare maxProcessChecks=10
-
-# The delay in seconds between process checks.
-declare maxDelaySeconds=1
-# ----------------------------
-
-###################################################################
-###################################################################
-###################################################################
-
-################################################################################
-#                         Command Line Option Lengend
+##
+# @author Anthony E. Rutledge
+# @version 1.0
+# @copyright (c) 2020, Anthony E. Rutledge
 #
-# -d = The immediate parent directory (../) of all directories to process: "/var/local/<application>/data/input/"
-# -O = Order of directory processing: file name (default), oldest, newest, smallest, largest
-# -o = Order of file processing: file name (default), oldest, newest, smallest, largest
-# -q = maxFilesPerDir The max number of files to process in any one set: Default = 100
-# -s = maxFileProcessingSeconds for each file: Default = 15
-# -c = maxProcessChecks during the processing of a file: Default = 10
-# -w = maxDelaySeconds between process checks: Default = 1
+# Processes several directories of files quasi-transactionally with sed.
 #
+# 1) Processes each file in the background.
+# 
+# 2) Limits the processing time of each file processing process with a
+#    monitoring process.
+# 
+# 3) Traps process killing signals (HUP, INT, QUIT, TERM, ...) to discourage
+#    incomplete file writes.
+#
+# 4) Logs errors to
+#       a) Application log
+#       b) System log
+#
+# 5) Able to send e-mail to notify about exceptional situations.
+#
+# 6) Maintains per-directory transaction manifest: (in progress)
+#
+# 7) Cleans-up the environment before the process dies, unless SIGKILL (9) is issued.
+#
+# @param string $1 The directory location of where to start from.
+# @param string $2 The field in a listing (ls) to sort directories: mtime, size, or name.
+# @param string $3 The order to process directories: asc or desc.
+# @param string $4 The field in a listing (ls) to sort files: mtime, size, or name.
+# @param string $5 The order to process files: asc or desc.
+# @param int    $6 The maximim number of files to process, consecutively, in one pass.
+# @param int    $7 The maximim time, in seconds, allowed per file before killing the process.
+# @param int    $8 The maximum process checks allowed before the process gets killed.
+# @param int    $9 The maximum amound of time, in seconds, between process checks.
+#
+# @return bool Returns 0 if all files were processed. Otherwise, non-zero is returned.
+###
+function main ()
+{
+    ###################################################################
+    ################ PROCESSING CONSTRAINTS (CONSTANTS) ###############
+    #############################(Limits)##############################
+
+    # --- File Count --- #
+
+    # The minimum files to process at a time.
+    declare -ir MIN_FILES_PER_CUSTOMER_JOB=1
+
+    # The maximum files to process in one customer directory (..../input/sorted/<customer>) at a time.
+    declare -ir MAX_FILES_PER_CUSTOMER_JOB=1000
+    # ----------------------------
+
+    # --- Processing Time --- #
+
+    # The minimum time allowed to process a file.
+    declare -ir MIN_FILE_PROCESSING_SECONDS=1
+
+    # The maximum time allowed to process a file.
+    declare -ir MAX_FILE_PROCESSING_SECONDS=30
+    # ----------------------------
+
+    # --- Process Polling --- #
+
+    # The minimum times a process check might occur per file processed.
+    declare -ir MIN_PROCESS_CHECKS=10
+
+    # The maximum times a process check can occur per file processed.
+    declare -ir MAX_PROCESS_CHECKS=20
+    # ----------------------------
+
+    # --- Polling Interval --- #
+
+    # The minimum possible delay between process checks.
+    declare -ir MIN_DELAY_SECONDS=1
+
+    # The maximum possible delay between process checks.
+    declare -ir MAX_DELAY_SECONDS=5
+    # ----------------------------
+
+    ###################################################################
+    ############### Variables for Command Line Arugments ##############
+    ########################### (Defaults) ############################
+
+    # --- Where to Start! --- #
+
+    # The uppermost parent directory for the entire taks to be done.
+    declare rootInputDir="/var/local/yourApp/data/input/"
+    # ----------------------------
+
+    # --- Sorting Options --- #
+
+    # The field in a listing (ls) upon which to sort directories.
+    declare dirSortKey="mtime"
+
+    # The order to process the customer directories under .../input/sorted/
+    declare dirSortOrder="asc"
+
+    # The field in a listing (ls) upon which to sort files.
+    declare fileSortKey="mtime"
+
+    # The order to process the customer files under ..../input/sorted/<customer>)
+    declare fileSortOrder="asc"
+    # ----------------------------
+
+    # --- Processing Limits --- #
+
+    # The maximum number of files to process in a customer folder at a time.
+    declare maxFilesPerDir=100
+
+    # The maximum number of seconds to attempt processing a file.
+    declare maxFileProcessingSeconds=15
+
+    # The maximum number of times allowed to check to see if process has finished.
+    declare maxProcessChecks=10
+
+    # The delay in seconds between process checks.
+    declare maxDelaySeconds=1
+    # ----------------------------
+
+    ###################################################################
+    ###################################################################
+    ###################################################################
+
+    ################################################################################
+    #                         Command Line Option Lengend
+    #
+    # -r = The immediate parent directory (../) of all directories to process: "/var/local/<application>/data/input/"
+    # -K = Directory sort key: mtime, size, or name
+    # -O = Order of directory processing: asc (earlies/oldest/smallest to latest/newest/largest), or desc (large to small)
+    # -k = File sort key: mtime, size, or name
+    # -o = Order of file processing: file name (default), oldest, newest, smallest, largest
+    # -q = maxFilesPerDir The max number of files to process in any one set: Default = 100
+    # -s = maxFileProcessingSeconds for each file: Default = 15
+    # -c = maxProcessChecks during the processing of a file: Default = 10
+    # -w = maxDelaySeconds between process checks: Default = 1
+    #
+    ################################################################################
+    # TODO: Clean up getops algorithm. Add filter step before assigning the value of $OPTARG
+    
+    declare OPTIND
+
+    while getopts :d:t:o:S:C:D: option
+    do
+        case "$option" in:
+            r) rootInputDir=$OPTARG
+            K) dirSortKey=$OPTARG
+            O) dirSortOrder=$OPTARG
+            k) fileSortKey=$OPTARG
+            o) fileSortOrder=$OPTARG
+            q) maxFilesPerDir=$OPTARG
+            s) maxFileProcessingSeconds=$OPTORG
+            c) maxProcessChecks=$OPTORG
+            d) maxDelaySeconds=$OPTORG
+            :) echo "Invalid argument to: $option"
+           \?) echo "Invaild option supplied. Must be r, K, O, k, o, q, s, c, and/or d !!"
+        esac
+    done
+
+    ################### Validate User Supplied Options & Arguments #################
+
+    if [[ ! isRootInputDir $rootInputDir ]]
+    then
+        exit 1
+    fi
+
+    if [[ ! isDirKey $dirKey ]]
+    then
+        exit 2
+    fi
+
+    if [[ ! isDirOrder $dirOrder ]]
+    then
+        exit 3
+    fi
+    
+    if [[ ! isFileKey $fileKey ]]
+    then
+        exit 4
+    fi
+
+    if [[ ! isFileOrder $fileOrder ]]
+    then
+        exit 5
+    fi
+
+    if [[ ! isGoodMaxFilesPerDir $MIN_FILES_PER_CUSTOMER_DIR $MAX_FILES_PER_CUSTOMER_DIR $maxFilesPerDir ]]
+    then
+        exit 6
+    fi
+
+    if [[ ! isGoodMaxFileProcessingSeconds $MIN_FILE_PROCESSING_SECONDS $MAX_FILE_PROCESSING_SECONDS $maxFileProcessingSeconds ]]
+    then
+        exit 7
+    fi
+
+    if [[ ! isGoodMaxProcessChecks $MIN_PROCESS_CHECKS $MAX_PROCESS_CHECKS $maxProcessChecks ]]
+    then
+        exit 8
+    fi
+
+    if [[ ! isGoodMaxDelaySeconds $MIN_DELAY_SECONDS $MAX_DELAY_SECONDS $maxDelaySeconds ]]
+    then
+        exit 9
+    fi
+
+    ################################################################################
+    
+    processDirectories "$rootInputDir" "$dirSortKey" "$dirSortOrder" "$fileSortKey" "$fileSortOrder" $ma"$fileSortKey"xFilesPerDir $maxFileProcessingSeconds $maxProcessChecks $maxDelaySeconds
+}
+
 ################################################################################
-# TODO: Clean up getops algorithm. Add filter step before assigning the value of $OPTARG
 
-while getopts :d:t:o:S:C:D: option
-do
-    case "$option" in:
-        d) rootInputDir=$OPTARG
-        O) dirOrder=$OPTARG
-        o) fileOrder=$OPTARG
-        q) maxFilesPerDir=$OPTARG
-        s) maxFileProcessingSeconds=$OPTORG
-        c) maxProcessChecks=$OPTORG
-        w) maxDelaySeconds=$OPTORG
-        :) echo "Invalid argument to $option"
-       \?) echo "Invaild option."
-    esac
-done
-
-################### Validate User Supplied Options & Arguments #################
-# TODO: Move validation steps (if possible) to main()
-
-if [[ ! isGoodRootInputDir $rootInputDir ]]
-then
-    exit 1
-fi
-
-if [[ ! isGoodDirOrder $dirOrder ]]
-then
-    exit 2
-fi
-
-if [[ ! isGoodFileOrder $fileOrder ]]
-then
-    exit 3
-fi
-
-if [[ ! isGoodMaxFilesPerDir $MIN_FILES_PER_CUSTOMER_DIR $MAX_FILES_PER_CUSTOMER_DIR $maxFilesPerDir ]]
-then
-    exit 4
-fi
-
-if [[ ! isGoodMaxFileProcessingSeconds $MIN_FILE_PROCESSING_SECONDS $MAX_FILE_PROCESSING_SECONDS $maxFileProcessingSeconds ]]
-then
-    exit 5
-fi
-
-if [[ ! isGoodMaxProcessChecks $MIN_PROCESS_CHECKS $MAX_PROCESS_CHECKS $maxProcessChecks ]]
-then
-    exit 6
-fi
-
-if [[ ! isGoodMaxDelaySeconds $MIN_DELAY_SECONDS $MAX_DELAY_SECONDS $maxDelaySeconds ]]
-then
-    exit 7
-fi
-
-################################################################################
-
-main "$rootInputDir" "$dirOrder" "$fileOrder" $maxFilesPerDir $maxFileProcessingSeconds $maxProcessChecks $maxDelaySeconds
+main "$@"
