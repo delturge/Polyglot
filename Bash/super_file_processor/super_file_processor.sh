@@ -30,7 +30,7 @@ exec 2>/var/log/animals/error.log
 ################################################################################
 
 
-########################### APPLICATION FUNCTIONS ##############################
+################### APPLICATION HELPER FUNCTIONS #################
 
 
 ##################################################################
@@ -107,7 +107,7 @@ function cashEdit003 ()
 
 function processCash ()
 {
-    declare -ir GOOD_TRANSACTION=3
+    declare -ir GOOD_TRANSACTION=4
     declare -i numEdits=0
 
     trap '' INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
@@ -116,32 +116,32 @@ function processCash ()
     declare -r OUTPUT_FILE="$2"
 
     if generalEdit001 "$filename"
-    then                                                                         
+    then                                            
         (( numEdits++ ))
     else
         return 1                  
     fi
 
     if cashEdit001 "$filename"
-    then                                                                         
+    then                                                  
         (( numEdits++ ))
     else
         return 2
     fi
 
     if dogEdit002 "$filename"
-    then                                                                         
+    then                                                   
         (( numEdits++ ))
     else
         return 3
     fi
 
     if dogEdit003 "$filename"
-    then                                                                         
+    then                                        
         (( numEdits++ ))
     else
         return 4
-    fi                                                
+    fi
 
     trap - INT QUIT HUP ILL ABRT EMT BUS FPE SEGV PIPE TERM
 }
@@ -199,8 +199,9 @@ function checkFileProcessingStatus ()
         return 0
     else
         logFileProcessingMessage $PPID $PID $FILENAME $GOOD_MESSAGE
-        return 1
     fi
+    
+    return 1
 }
 
 ##
@@ -264,6 +265,36 @@ function moveCurrentBadFile ()
 }
 
 ##
+# Move a file that has taken to long to process to the ..../errors/<customer>/
+#
+# @author Anthony E. Rutledge
+# @version 1.0
+# @copyright (c) 2020, Anthony E. Rutledge
+#
+# @param string $1 The parent process ID
+# @param string $2 The process ID
+# @param string $3 The name of the file being processed.
+#
+# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
+###
+function moveCurrentBadFile ()
+{
+    declare -r PPID=$1
+    declare -r PID=$2
+    declare -r FILENAME="$3"
+    declare -r GOOD_MESSAGE="Notice: Moved file ${filename} to its error directory! PID=${PID} PPID=${PPID}"
+    declare -r BAD_MESSAGE="Alert: Unable to move ${filename} to its error directory! PID=${PID} PPID=${PPID}"
+
+    if moveBadFile $FILENAME
+    then
+        logFileProcessingMessage $PPID $PID $FILENAME $GOOD_MESSAGE
+    else
+        logFileProcessingMessage $PPID $PID $FILENAME $BAD_MESSAGE
+        # Send alert or message admin.
+    fi
+}
+
+##
 # Processes all the files in a directory with single for loop,
 # all while limiting processing time.
 #
@@ -281,21 +312,18 @@ function moveCurrentBadFile ()
 ###
 function processFiles ()
 {
-    #ksh version
-    trap 'cleanUp $CURRENT_PROCESS_ID $lastJobPid $LINENO; exit' HUP INT QUIT ILL BUS ABRT SEGV PIPE TERM
+    trap 'cleanUp $CURRENT_PID $lastJobPid $BASH_COMMAND $LINENO; exit' HUP INT QUIT ILL BUS ABRT SEGV PIPE TERM
 
-    # Bash version 
-    # trap 'cleanUp $CURRENT_PROCESS_ID $lastJobPid $BASH_COMMAND $LINENO; exit' HUP INT QUIT ILL BUS ABRT SEGV PIPE TERM
-
-    declare -r fileProcessingFunction="$1"
+    declare -r CURRENT_PID=$$
+    
+    declare -r FILE_PROCESSING_FUNCTION="$1"
     declare -ir MAX_PROCESSING_SECONDS=$2
     declare -ir MAX_PROCESS_CHECKS=$3
     declare -ir MAX_DELAY_SECONDS=$4
-    declare -r TARGET_DIRECTORY=$5
+    declare -r TARGET_DIRECTORY="$5"
+    declare -r ERROR_DIRECTORY="6"
 
-    declare -r CURRENT_PROCESS_ID=$$
     declare lastJobPid
-    declare -r IFS="\n"
 
     # You must turn on null globbing to account for the empty directory edge case
     # while using * to loop through the contents of a directory with a for loop.
@@ -309,24 +337,24 @@ function processFiles ()
     fi
 
     # Where the files to be processed are located.
-    cd $TARGET_DIRECTORY
+    cd "$TARGET_DIRECTORY"
 
     # Iterate over all files in the $TARGET_DIRECTORY
     for filename in *
     do
         # Process the file in the background.
-        $fileProcessingFunction "$filename" &
+        $FILE_PROCESSING_FUNCTION "$filename" &
         lastJobPid=$!
 
         # Monitor file processing in the foreground.
         if limitProcessRuntime $lastJobPid $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS
         then
-            moveGoodFile $filename
+            mv $filename 
         else
             if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid $filename
             then
-                stopProcessingFile $CURRENT_PROCESS_ID $lastJobPid $filename
-                moveCurrentBadFile $CURRENT_PROCESS_ID $lastJobPid $filename
+                stopProcessingFile $CURRENT_PID $lastJobPid $filename
+                moveBadFile $CURRENT_PID $lastJobPid $filename
             fi
         fi
     done
@@ -369,78 +397,79 @@ function processFiles ()
 ###
 function main ()
 {
-# TODO: Attempt to move constants, variables, and filtering and validation of user input data here.
+# TODO: Move constants, variables, and filtering and validation of user input from global area to here.
+# TODO: Move main's current logic into a function.
+# TODO: Let main() call this new function to do the work of iterating over directories (which is what main() does now).
 
-
-# TODO: Attempt to move modularize from line 433 to 490 into a function. Assuming validations tests pass,
-# let main() call this function to do the work of processing files in directories (which is what main() does now).
-
+    declare -r CURRENT_PID=$$
+    declare -r SORTED_FILES_DIR="sorted/"
+    
     # Used to format the output of the /usr/bin/time command.
     declare -r TIME_FORMAT="CPUKernel:%S CPUUser:%U CPUTotal:%P ExecTime:%E ExecSecs:%e MaxMemKB:%M AveResMemKB:%t AveTotalMemBK:%K FilesIn:%I FilesOut:%O SignalsIn:%k"
 
-    declare -r rootInputDir=$1
-    declare -r dirOrder=$2
-    declare -r fileOrder=$3
-    declare -r maxFilesPerDir=$4
-    declare -ir MAX_PROCESSING_SECONDS=$5
-    declare -ir MAX_PROCESS_CHECKS=$6
-    declare -ir MAX_DELAY_SECONDS=$7
+    declare -r ROOT_INPUT_DIR=$1
+    declare -r DIR_SORT_KEY=$2
+    declare -r DIR_SORT_ORDER=$3
+    declare -r FILE_SORT_KEY=$4
+    declare -r FILE_SORT_ORDER=$5
+    declare -r MAX_FILES_PER_DIR=$6
+    declare -ir MAX_PROCESSING_SECONDS=$7
+    declare -ir MAX_PROCESS_CHECKS=$8
+    declare -ir MAX_DELAY_SECONDS=$9
 
     # Types of files to process.
-    declare -Ar FILE_TYPES=(Cash Debit Credit Trade Refund)
+    declare -Ar DIRECTORIES=($(ls -ld "${ROOT_INPUT_DIR}${SORTED_FILES_DIR}"*/))
 
     # The number of directories to process.
-    declare -ir _FILE_TYPES${#FILE_TYPES[@]} # Get the array length.
+    declare -ir DIRECTORIES_LENGTH=${#DIRECTORIES[@]}
 
     # Directories where all the files did not process successfully.
-    declare -A badProcessing=()
+    declare -A errorDirs=()
 
     # The number of successfully processed directories.
     declare -i processedDirectories=0
 
     # Iterate through all file sets. 
-    for fileType in "${FILE_TYPES[@]}"
+    for fileTypeDir in "${DIRECTORIES[@]}"
     do
-        currentPid=$$
-        fileProcessingFunction="process${fileType}" # Build the name of the directory processing function.
+        fileProcessingFunction="process${fileTypeDir}" # Build the name of the directory processing function.
 
         # Add log entry header.
         cat <<- EOF
         ==========
         JOB START: 
-        $(getDateTime) ${TARGET_DIRECTORIES["$fileSet"]} $(hostname) $(hostname -i | awk '{print $2}')
-        $(getProcessReport $currentPid)
-
+        $(getDateTime) ${TARGET_DIRECTORIES["$fileType"]} $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP
+        $(getProcessReport $CURRENT_PID)
         ----------
-        EOF 1>&2
+        EOF 1>>&2
 
         # The /usr/bin/time command will add the log body.
+        # processFiles () will iterate through the files of a directory.
+        
         if /usr/bin/time -f $TIME_FORMAT processFiles \
             "$fileProcessingFunction" $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS $TARGET_DIRECTORIES
         then
             # The file set was processed successfully.
             (( processedDirectories++ ))
         else
-            badAnimals[$creature]=${TARGET_DIRECTORIES["$creature"]}
+            errorDirs[$fileTypeDir]=${TARGET_DIRECTORIES["$creature"]}
             errorMessage "All $creature files were not processed!"
         fi
 
         # Add log entry footer.
         cat <<- EOF
-
-        $(getDateTime) ${TARGET_DIRECTORIES["$creature"]} $(hostname) $(hostname -i | awk '{print $2}')
-        $(getProcessReport $currentProcessId)
+        $(getDateTime) ${TARGET_DIRECTORIES["$fileType"]} $(hostname) $(hostname -i | awk '{print $2}')
+        $(getProcessReport $CURRENT_PID)
         JOB END: 
         ==========
-        EOF 1>&2
+        EOF 1>>&2
     done
 
-    if (( processedFileSets == ALL_FILES_SETS_PROCESSED ))
+    if (( processedDirectories == DIRECTORIES_LENGTH ))
     then
-        message "Processing complete! All files were processed."
+        message "Processing complete! All files in all directories were processed."
         return 0
     else
-        # Move bad files to their error directory equivalents.
         errorMessage "Animal files moved to a new directory."
     fi
 
