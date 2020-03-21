@@ -453,18 +453,18 @@ function main ()
     # The absolute path to the sorted file directories.
     declare -r TARGET_ROOT_PATH="${ROOT_INPUT_DIR}${SORTED_FILES_DIR}"
     
-    # The absolute path to a specific set  of files under the TARGET_ROOT_PATH
+    # The absolute path to a specific set of files under the TARGET_ROOT_PATH
     declare targetDir
 
     # Types of files to process. One directory per file type.
     # Todo: Replace this basic logic for determining directory
-    #       processing order with the dynamic solution based on:
+    #       processing order with a dynamic solution based on:
     #       1) DIR_SORT_KEY: mtime, size, name
     #       2) DIR_SORT_ORDER: asc or desc
     declare -Ar TARGET_DIRS=($(ls -ld "${TARGET_ROOT_PATH}"*/))
 
     # The number of directories to process.
-    declare -ir TARGET_DIRS_LENGTH=${#DIRECTORIES[@]}
+    declare -ir TARGET_DIRS_LENGTH=${#TARGET_DIRS[@]}
 
     # Directories where all the files did not process successfully.
     declare -A errorDirs=()
@@ -475,8 +475,8 @@ function main ()
     # Iterate through all directories. 
     for fileTypeDir in "${TARGET_DIRS[@]}"
     do
-        fileProcessingFunction="process${fileTypeDir}" # Build the name of the directory processing function.
-        targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"
+        targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"  # The exact set of files to work on.
+        fileProcessingFunction="process${fileTypeDir}" # The name of the function to process the set.
 
         # Add log entry header. GitHub does not recognize <<- for here docs!
         cat << EOF 1>>&2
@@ -497,8 +497,8 @@ EOF
             # The file set was processed successfully.
             (( processedDirs++ ))
         else
-            errorDirs[$fileTypeDir]=${TARGET_DIRECTORIES["$creature"]}
-            errorMessage "All $creature files were not processed!"
+            errorDirs+=$targetDir
+            logToApp "err" "All $targetDir files were not processed!"
         fi
 
         # Add log entry footer.
@@ -510,15 +510,14 @@ EOF
 EOF
     done
 
-    if (( processedDirs == DIRECTORIES_LENGTH ))
+    if (( processedDirs == TARGET_DIRS_LENGTH ))
     then
-        message "Processing complete! All files in all directories were processed."
+        logToApp "info" "Processing complete! All files in all directories were processed."
         return 0
-    else
-        errorMessage "Animal files moved to a new directory."
     fi
 
-    return 1
+    logToApp "warning" "File processing issues in at: ${errorDirs[*]}"
+    return 3
 }
 
 ################################################################################
