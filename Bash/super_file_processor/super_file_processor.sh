@@ -280,8 +280,10 @@ function moveBadFile ()
     declare -r PPID=$1
     declare -r PID=$2
     declare -r FILENAME="$3"
+    declare -r ERROR_DIR=$(echo $FILENAME | sed -n s//errors/)
     declare -r GOOD_MESSAGE="Notice: Moved file ${filename} to its error directory! PID=${PID} PPID=${PPID}"
     declare -r BAD_MESSAGE="Alert: Unable to move ${filename} to its error directory! PID=${PID} PPID=${PPID}"
+
 
     if mv -f $FILENAME $ERROR_DIR
     then
@@ -293,8 +295,7 @@ function moveBadFile ()
 }
 
 ##
-# Processes all the files in a directory with single for loop,
-# all while limiting processing time.
+# Process all of the files in a directory iteratively, all while limiting processing time.
 #
 # @author Anthony E. Rutledge
 # @version 1.0
@@ -356,14 +357,14 @@ function processFiles ()
             if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid $absoluteFilePath
             then
                 stopProcessingFile $CURRENT_PID $lastJobPid $absoluteFilePath
-                moveBadFile $CURRENT_PID $lastJobPid $absoluteFilePath
+                moveBadFile $CURRENT_PID $lastJobPid $absoluteFilePath $ERROR_DIR
             fi
         fi
     done
 }
 
 ##
-# Processes all of the target directories, not the files there in.
+# Processes all target directories.
 #
 # @author Anthony E. Rutledge
 # @version 1.0
@@ -387,10 +388,10 @@ function processDirectories ()
 
     # Where file types live in sub-directories. 
     # Where the program spends most of its time.
-    declare -r SORTED_FILES_DIR="input/files/"
+    declare -r SORTED_FILES_DIR="input/sorted/files/"
     
     # Where the procssing order for each sub-directory is recoreded and tracked in text files.
-    declare -r SORTED_MANIFESTS_DIR="input/manifests/"
+    declare -r SORTED_MANIFESTS_DIR="input/sorted/manifests/"
     #-------------------------
   
     # --- Output Related Constants --- #
@@ -405,10 +406,10 @@ function processDirectories ()
     # --- Error Output Related Constants --- #
     
     # Where bad files get moved to (in sub-directories by type).
-    declare -r ERRORS_FILES_DIR="output/errors/files/"
+    declare -r ERROR_FILES_DIR="output/errors/files/"
     
     # Where bad files get moved to (in sub-directories by type).
-    declare -r ERRORS_MANIFESTS_DIR="output/errors/manifests/"
+    declare -r ERROR_MANIFESTS_DIR="output/errors/manifests/"
     #-------------------------
 
     # Used to format the stderr ouput of the /usr/bin/time command.
@@ -431,8 +432,20 @@ function processDirectories ()
     # The absolute path to the sorted file directories.
     declare -r TARGET_ROOT_PATH="${ROOT_INPUT_DIR}${SORTED_FILES_DIR}"
     
-    # The absolute path to a specific set of files under the TARGET_ROOT_PATH
+    # The absolute path to the finished file directories.
+    declare -r FINSIHED_ROOT_PATH="${ROOT_INPUT_DIR}${FINISHED_FILES_DIR}"
+    
+    # The absolute path to the error file directories.
+    declare -r ERROR_ROOT_PATH="${ROOT_INPUT_DIR}${ERROR_FILES_DIR}"
+    
+    # The absolute path to a specific directory of files under the TARGET_ROOT_PATH
     declare targetDir
+    
+    # The absolute path to a specific directory of files under the FINSIHED_ROOT_PATH
+    declare finishedDir
+    
+    # The absolute path to a specific directory of files under the ERROR_ROOT_PATH
+    declare errorsDir
 
     # Types of files to process. One directory per file type.
     # Todo: Replace this basic logic for determining directory
@@ -453,8 +466,11 @@ function processDirectories ()
     # Iterate through all directories. 
     for fileTypeDir in "${TARGET_DIRS[@]}"
     do
-        targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"  # The exact set of files to work on.
-        fileProcessingFunction="process${fileTypeDir}" # The name of the function to process the set.
+        targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"      # The exact set of files to work on.
+        finishedDir="${FINSIHED_ROOT_PATH}${fileTypeDir}"  # Where to put fininshed files.
+        errorsDir="${ERROR_ROOT_PATH}${fileTypeDir}"       # Where to put files with problems.
+        
+        fileProcessingFunction="process${fileTypeDir}"     # The name of the function to process the targetDir
 
         # Add log entry header. GitHub does not recognize <<- for here docs!
         cat << EOF 1>>&2
@@ -464,13 +480,13 @@ function processDirectories ()
         $(getProcessReport $CURRENT_PID)
         ----------
 EOF
-        # The /usr/bin/time command will add important resource information to the log body.
+        # The /usr/bin/time command will add important resource usage information to the log body.
         
         # The processFiles() function will iterate through the files of a directory,
         # all while applying "fileProcessingFunction" to those same files.
         
         if /usr/bin/time -f $TIME_FORMAT processFiles \
-            "$fileProcessingFunction" $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS "$targetDir"
+            "$fileProcessingFunction" $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS "$targetDir" "$finishedDir" "$errorsDir"
         then
             # The file set was processed successfully.
             (( processedDirs++ ))
