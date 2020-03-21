@@ -388,12 +388,14 @@ function processFiles ()
 # 7) Cleans-up the environment before the process dies, unless SIGKILL (9) is issued.
 #
 # @param string $1 The directory location of where to start from.
-# @param string $2 The order to process customer directories in: mtime, size, or by name.
-# @param string $3 The order to process files in customer directories: mtime, size, or by name.
-# @param int    $4 The maximim number of files to process, consecutively, in a customer's directory in one pass.
-# @param int    $5 The maximim seconds allowed to process a file.directory location of the files. Example: "/opt/files/" <--- Yes, trailing slash.
-# @param int    $6 The maximum process checks allowed before the process gets killed.
-# @param int    $7 The maximum amound of time, in seconds, between process checks.
+# @param string $2 The field in a listing (ls) to sort directories: mtime, size, or name.
+# @param string $3 The order to process directories: asc or desc.
+# @param string $4 The field in a listing (ls) to sort files: mtime, size, or name.
+# @param string $5 The order to process files: asc or desc.
+# @param int    $6 The maximim number of files to process, consecutively, in one pass.
+# @param int    $7 The maximim time, in seconds, allowed per file before killing the process.
+# @param int    $8 The maximum process checks allowed before the process gets killed.
+# @param int    $9 The maximum amound of time, in seconds, between process checks.
 #
 # @return bool Returns 0 if all files were processed. Otherwise, non-zero is returned.
 ###
@@ -403,27 +405,62 @@ function main ()
 # TODO: Move main's current logic into a function.
 # TODO: Let main() call this new function to do the work of iterating over directories (which is what main() does now).
 
-    declare -r CURRENT_PID=$$
-    declare -r SORTED_FILES_DIR="sorted/"
+    # --- Input Related Constants --- #
+
+    # Where file types live in sub-directories. 
+    # Where the program spends most of its time.
+    declare -r SORTED_FILES_DIR="input/files/"
     
-    # Used to format the output of the /usr/bin/time command.
+    # Where the procssing order for each sub-directory is recoreded and tracked in text files.
+    declare -r SORTED_MANIFESTS_DIR="input/manifests/"
+    #-------------------------
+  
+    # --- Output Related Constants --- #
+    
+    # Where completed work is stored in sub-directories by type.
+    declare -r FINISHED_FILES_DIR="output/finished/files/"
+    
+    # Where final manifests live.
+    declare -r FINISHED_MANIFESTS_DIR="output/finished/manifests/"
+    #-------------------------
+
+    # --- Error Output Related Constants --- #
+    
+    # Where bad files get moved to (in sub-directories by type).
+    declare -r ERRORS_FILES_DIR="output/errors/files/"
+    
+    # Where bad files get moved to (in sub-directories by type).
+    declare -r ERRORS_MANIFESTS_DIR="output/errors/manifests/"
+    #-------------------------
+
+    # Used to format the stderr ouput of the /usr/bin/time command.
     declare -r TIME_FORMAT="CPUKernel:%S CPUUser:%U CPUTotal:%P ExecTime:%E ExecSecs:%e MaxMemKB:%M AveResMemKB:%t AveTotalMemBK:%K FilesIn:%I FilesOut:%O SignalsIn:%k"
 
+    # main()'s process ID.
+    declare -r CURRENT_PID=$$
+
+    # User / Program Input. See doc block above.
     declare -r ROOT_INPUT_DIR=$1
     declare -r DIR_SORT_KEY=$2
     declare -r DIR_SORT_ORDER=$3
     declare -r FILE_SORT_KEY=$4
     declare -r FILE_SORT_ORDER=$5
-    declare -r MAX_FILES_PER_DIR=$6
+    declare -ir MAX_FILES_PER_DIR=$6
     declare -ir MAX_PROCESSING_SECONDS=$7
     declare -ir MAX_PROCESS_CHECKS=$8
     declare -ir MAX_DELAY_SECONDS=$9
 
     # The absolute path to the sorted file directories.
     declare -r TARGET_ROOT_PATH="${ROOT_INPUT_DIR}${SORTED_FILES_DIR}"
+    
+    # The absolute path to a specific set  of files under the TARGET_ROOT_PATH
     declare targetDir
 
     # Types of files to process. One directory per file type.
+    # Todo: Replace this basic logic for determining directory
+    #       processing order with the dynamic solution based on:
+    #       1) DIR_SORT_KEY: mtime, size, name
+    #       2) DIR_SORT_ORDER: asc or desc
     declare -Ar TARGET_DIRS=($(ls -ld "${TARGET_ROOT_PATH}"*/))
 
     # The number of directories to process.
@@ -441,16 +478,18 @@ function main ()
         fileProcessingFunction="process${fileTypeDir}" # Build the name of the directory processing function.
         targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"
 
-        # Add log entry header.
+        # Add log entry header. GitHub does not recognize <<- for here docs!
         cat << EOF 1>>&2
         ==========
         JOB START: 
-        $(getDateTime) "$targetDir" $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP
+        $(getDateTime) "$targetDir" $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP: (DRY, make function.)
         $(getProcessReport $CURRENT_PID)
         ----------
 EOF
-        # The /usr/bin/time command will add the log body.
-        # processFiles () will iterate through the files of a directory.
+        # The /usr/bin/time command will add important resource information to the log body.
+        
+        # The processFiles() function will iterate through the files of a directory,
+        # all while applying "fileProcessingFunction" to those same files.
         
         if /usr/bin/time -f $TIME_FORMAT processFiles \
             "$fileProcessingFunction" $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS "$targetDir"
