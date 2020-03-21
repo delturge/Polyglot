@@ -180,7 +180,7 @@ function processRefund ()
 #
 # @param string $1 The parent process ID
 # @param string $2 The process ID
-# @param string $3 The name of the file being processed.
+# @param string $3 The absolute path name of the file being processed.
 #
 # @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
 ###
@@ -189,16 +189,16 @@ function checkFileProcessingStatus ()
     declare -r PPID=$1
     declare -r PID=$2
     declare -r FILENAME="$3"
-    declare -r BAD_MESSAGE="Warning: Process ${PID} of parent ${PPID} is taking too long to process ${FILENAME}!"
-    declare -r GOOD_MESSAGE="Info: Process ${PID} of parent ${PPID} finished processing file ${FILENAME}. All good."
+    declare -r BAD_MESSAGE="Process ${PID} of parent ${PPID} is taking too long to process ${FILENAME}!"
+    declare -r GOOD_MESSAGE="Process ${PID} of parent ${PPID} finished processing file ${FILENAME}. All good."
 
     if isProcess $lastJobPid
     then
-        logFileProcessingMessage $PPID $PID $FILENAME $BAD_MESSAGE
+        logToApp "warning" $BAD_MESSAGE
         # Send alert or message to admin.
         return 0
     else
-        logFileProcessingMessage $PPID $PID $FILENAME $GOOD_MESSAGE
+        logToApp "info" $GOOD_MESSAGE
     fi
     
     return 1
@@ -213,7 +213,7 @@ function checkFileProcessingStatus ()
 #
 # @param string $1 The parent process ID
 # @param string $2 The process ID
-# @param string $3 The name of the file being processed.
+# @param string $3 The absolute path name of the file being processed.
 #
 # @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
 ###
@@ -222,20 +222,21 @@ function stopProcessingFile ()
     declare -r PPID=$1
     declare -r PID=$2
     declare -r FILENAME="$3"
-    declare -r GOOD_MESSAGE="Error: Intentionally killed child process ${PID} of parent ${PPID} while processing ${FILENAME}!"
-    declare -r BAD_MESSAGE="Alert: Unable to kill child process ${PID} of parent ${PPID}. May still be processing ${FILENAME}!"
+    declare -r GOOD_MESSAGE="Intentionally killed child process ${PID} of parent ${PPID} while processing ${FILENAME}!"
+    declare -r BAD_MESSAGE="Unable to kill child process ${PID} of parent ${PPID}. May still be processing ${FILENAME}!"
 
     if killPidFamily $PID
     then
-        logFileProcessingMessage $PPID $PID $FILENAME $GOOD_MESSAGE
+        logToApp "notice" $GOOD_MESSAGE
     else
-        logFileProcessingMessage $PPID $PID $FILENAME $BAD_MESSAGE
+        logToApp "alert" $BAD_MESSAGE
         # Send alert or message to admin.
     fi
 }
 
 ##
-# Move a file that has taken to long to process to the ..../errors/<customer>/
+# Move a file that has taken to long to process to the
+# "blah/blah/blah/errors/${fileTypeDir}/" directory.
 #
 # @author Anthony E. Rutledge
 # @version 1.0
@@ -243,11 +244,11 @@ function stopProcessingFile ()
 #
 # @param string $1 The parent process ID
 # @param string $2 The process ID
-# @param string $3 The name of the file being processed.
+# @param string $3 The absolute path name of the file being processed.
 #
 # @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
 ###
-function moveCurrentBadFile ()
+function moveBadFile ()
 {
     declare -r PPID=$1
     declare -r PID=$2
@@ -255,41 +256,11 @@ function moveCurrentBadFile ()
     declare -r GOOD_MESSAGE="Notice: Moved file ${filename} to its error directory! PID=${PID} PPID=${PPID}"
     declare -r BAD_MESSAGE="Alert: Unable to move ${filename} to its error directory! PID=${PID} PPID=${PPID}"
 
-    if moveBadFile $FILENAME
+    if mv -f $FILENAME $ERROR_DIR
     then
-        logFileProcessingMessage $PPID $PID $FILENAME $GOOD_MESSAGE
+        logToApp "notice" $PPID $PID $FILENAME $GOOD_MESSAGE
     else
-        logFileProcessingMessage $PPID $PID $FILENAME $BAD_MESSAGE
-        # Send alert or message admin.
-    fi
-}
-
-##
-# Move a file that has taken to long to process to the ..../errors/<customer>/
-#
-# @author Anthony E. Rutledge
-# @version 1.0
-# @copyright (c) 2020, Anthony E. Rutledge
-#
-# @param string $1 The parent process ID
-# @param string $2 The process ID
-# @param string $3 The name of the file being processed.
-#
-# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
-###
-function moveCurrentBadFile ()
-{
-    declare -r PPID=$1
-    declare -r PID=$2
-    declare -r FILENAME="$3"
-    declare -r GOOD_MESSAGE="Notice: Moved file ${filename} to its error directory! PID=${PID} PPID=${PPID}"
-    declare -r BAD_MESSAGE="Alert: Unable to move ${filename} to its error directory! PID=${PID} PPID=${PPID}"
-
-    if moveBadFile $FILENAME
-    then
-        logFileProcessingMessage $PPID $PID $FILENAME $GOOD_MESSAGE
-    else
-        logFileProcessingMessage $PPID $PID $FILENAME $BAD_MESSAGE
+        logToApp "alert" $BAD_MESSAGE
         # Send alert or message admin.
     fi
 }
@@ -320,9 +291,11 @@ function processFiles ()
     declare -ir MAX_PROCESSING_SECONDS=$2
     declare -ir MAX_PROCESS_CHECKS=$3
     declare -ir MAX_DELAY_SECONDS=$4
-    declare -r TARGET_DIRECTORY="$5"
-    declare -r ERROR_DIRECTORY="6"
+    declare -r TARGET_DIR="$5"
+    declare -r FINISHED_DIR="$6"
+    declare -r ERROR_DIR="$7"
 
+    declare absoluteFilePath
     declare lastJobPid
 
     # You must turn on null globbing to account for the empty directory edge case
@@ -337,11 +310,13 @@ function processFiles ()
     fi
 
     # Where the files to be processed are located.
-    cd "$TARGET_DIRECTORY"
+    cd "$TARGET_DIR"
 
     # Iterate over all files in the $TARGET_DIRECTORY
     for filename in *
     do
+        absoluteFilePath="${TARGET_DIR}${filename}"
+ 
         # Process the file in the background.
         $FILE_PROCESSING_FUNCTION "$filename" &
         lastJobPid=$!
@@ -349,12 +324,12 @@ function processFiles ()
         # Monitor file processing in the foreground.
         if limitProcessRuntime $lastJobPid $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS
         then
-            mv $filename 
+            mv -f $filename $FINISHED_DIR
         else
-            if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid $filename
+            if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid $absoluteFilePath
             then
-                stopProcessingFile $CURRENT_PID $lastJobPid $filename
-                moveBadFile $CURRENT_PID $lastJobPid $filename
+                stopProcessingFile $CURRENT_PID $lastJobPid $absoluteFilePath
+                moveBadFile $CURRENT_PID $lastJobPid $absoluteFilePath
             fi
         fi
     done
@@ -393,7 +368,7 @@ function processFiles ()
 # @param int    $6 The maximum process checks allowed before the process gets killed.
 # @param int    $7 The maximum amound of time, in seconds, between process checks.
 #
-# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
+# @return bool Returns 0 if all files were processed. Otherwise, non-zero is returned.
 ###
 function main ()
 {
@@ -417,28 +392,33 @@ function main ()
     declare -ir MAX_PROCESS_CHECKS=$8
     declare -ir MAX_DELAY_SECONDS=$9
 
-    # Types of files to process.
-    declare -Ar DIRECTORIES=($(ls -ld "${ROOT_INPUT_DIR}${SORTED_FILES_DIR}"*/))
+    # The absolute path to the sorted file directories.
+    declare -r TARGET_ROOT_PATH="${ROOT_INPUT_DIR}${SORTED_FILES_DIR}"
+    declare targetDir
+
+    # Types of files to process. One directory per file type.
+    declare -Ar TARGET_DIRS=($(ls -ld "${TARGET_ROOT_PATH}"*/))
 
     # The number of directories to process.
-    declare -ir DIRECTORIES_LENGTH=${#DIRECTORIES[@]}
+    declare -ir TARGET_DIRS_LENGTH=${#DIRECTORIES[@]}
 
     # Directories where all the files did not process successfully.
     declare -A errorDirs=()
 
     # The number of successfully processed directories.
-    declare -i processedDirectories=0
+    declare -i processedDirs=0
 
-    # Iterate through all file sets. 
-    for fileTypeDir in "${DIRECTORIES[@]}"
+    # Iterate through all directories. 
+    for fileTypeDir in "${TARGET_DIRS[@]}"
     do
         fileProcessingFunction="process${fileTypeDir}" # Build the name of the directory processing function.
+        targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"
 
         # Add log entry header.
         cat <<- EOF
         ==========
         JOB START: 
-        $(getDateTime) ${TARGET_DIRECTORIES["$fileType"]} $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP
+        $(getDateTime) "$targetDir" $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP
         $(getProcessReport $CURRENT_PID)
         ----------
         EOF 1>>&2
@@ -447,10 +427,10 @@ function main ()
         # processFiles () will iterate through the files of a directory.
         
         if /usr/bin/time -f $TIME_FORMAT processFiles \
-            "$fileProcessingFunction" $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS $TARGET_DIRECTORIES
+            "$fileProcessingFunction" $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS "$targetDir"
         then
             # The file set was processed successfully.
-            (( processedDirectories++ ))
+            (( processedDirs++ ))
         else
             errorDirs[$fileTypeDir]=${TARGET_DIRECTORIES["$creature"]}
             errorMessage "All $creature files were not processed!"
@@ -458,14 +438,14 @@ function main ()
 
         # Add log entry footer.
         cat <<- EOF
-        $(getDateTime) ${TARGET_DIRECTORIES["$fileType"]} $(hostname) $(hostname -i | awk '{print $2}')
+        $(getDateTime) $targetDir $(hostname) $(hostname -i | awk '{print $2}')
         $(getProcessReport $CURRENT_PID)
         JOB END: 
         ==========
         EOF 1>>&2
     done
 
-    if (( processedDirectories == DIRECTORIES_LENGTH ))
+    if (( processedDirs == DIRECTORIES_LENGTH ))
     then
         message "Processing complete! All files in all directories were processed."
         return 0
