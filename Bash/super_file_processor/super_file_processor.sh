@@ -415,7 +415,7 @@ function main ()
         targetDir="${TARGET_ROOT_PATH}${fileTypeDir}"
 
         # Add log entry header.
-        cat <<- EOF
+        cat <<-EOF
         ==========
         JOB START: 
         $(getDateTime) "$targetDir" $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP
@@ -437,7 +437,7 @@ function main ()
         fi
 
         # Add log entry footer.
-        cat <<- EOF
+        cat <<-EOF
         $(getDateTime) $targetDir $(hostname) $(hostname -i | awk '{print $2}')
         $(getProcessReport $CURRENT_PID)
         JOB END: 
