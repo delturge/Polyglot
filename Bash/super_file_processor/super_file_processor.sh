@@ -223,6 +223,44 @@ function moveGoodFile ()
 }
 
 ##
+# Ensures that the final destintions for files exist.
+#
+# @author Anthony E. Rutledge
+# @version 1.0
+# @copyright (c) 2020, Anthony E. Rutledge
+#
+# @param string $1 The destination directory.
+#
+# @return bool Returns 0 destinatino dir exist and is writeable, non-zero otherwise.
+###
+function destinationDirReady ()
+{
+    declare -r DESTINATION_DIR=$1
+
+    # Does the director exist?
+    if [[ ! isDirectory "$DESTINATION_DIR" ]]  #--> library/Datatypes/File.isDirectory
+    then
+        logToApp "err" "The directory $DESTINATION_DIR does not exist! Attempting to create."
+
+        # Try to create the directory.
+        if [[ ! mkdir -p "$DESTINATION_DIR" ]] # It is possible to set file mode with mkdir, too.
+        then
+            logToApp "err" "Unable to create the directory: ${DESTINATION_DIR}.\nCheck directory permissions."
+            return 1
+        fi
+    fi
+
+    # Is the directory writable?
+    if [[ ! isWriteable "$DESTINATION_DIR" ]]
+    then
+        logToApp "err" "The directory $DESTINATION_DIR is not writeable by $(whoami). Change the file mode."
+        return 2
+    fi
+
+    return 0
+}
+
+##
 # Process all of the files in a directory iteratively, all while limiting processing time.
 #
 # @author Anthony E. Rutledge
