@@ -131,7 +131,7 @@ function stopProcessingFile ()
 # @return bool Returns 0 if target dir exist, and has execute and read permissions.
 #              Otherwise, a non-zero value is returned.
 ###
-function targetDirReady ()
+function isTargetDirReady ()
 {
     declare -r TARGET_DIR=$1
 
