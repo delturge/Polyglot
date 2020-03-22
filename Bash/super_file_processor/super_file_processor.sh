@@ -132,7 +132,7 @@ function stopProcessingFile ()
 # @param string $3 The absolute path of the target file being moved.
 # @param string $4 The absolute path of the destination directory for bad files.
 #
-# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
+# @return bool Returns 0 the file was moved successfully, non-zero otherwise.
 ###
 function moveBadFile ()
 {
@@ -184,8 +184,9 @@ function moveBadFile ()
 # @param string $1 The parent process ID
 # @param string $2 The process ID
 # @param string $3 The absolute path name of the file being processed.
+# @param string $4 The absolute path of the destination directory for good files.
 #
-# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
+# @return bool Returns 0 the file was moved successfully, non-zero otherwise.
 ###
 function moveGoodFile ()
 {
