@@ -65,7 +65,7 @@ fi
 # @param string $2 The process ID
 # @param string $3 The absolute path name of the file being processed.
 #
-# @return bool Returns 0 if the process is actually dead. Otherwize, 1 is returned.
+# @return bool Returns 0 if the process is actually dead. Otherwise, 1 is returned.
 ###
 function checkFileProcessingStatus ()
 {
@@ -96,7 +96,7 @@ function checkFileProcessingStatus ()
 # @param string $2 The process ID
 # @param string $3 The absolute path name of the file being processed.
 #
-# @return bool Returns 0 if process was killed. Otherwize, 1 is returned.
+# @return bool Returns 0 if process was killed. Otherwise, 1 is returned.
 ###
 function stopProcessingFile ()
 {
