@@ -8,7 +8,7 @@
 ##################################################################
 
 # Set stderr back to file descriptor number two upon exit.
-trap 'exec 2>/dev/stderr; exit 1' 0
+trap 'exec 2>/dev/stderr; exit 99' 0
 
 ##################################################################
 #                  Open Error Log File Descriptor                #
