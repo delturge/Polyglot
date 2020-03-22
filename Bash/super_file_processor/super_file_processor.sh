@@ -65,31 +65,28 @@ fi
 # @param string $2 The process ID
 # @param string $3 The absolute path name of the file being processed.
 #
-# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
+# @return bool Returns 0 if the process is actually dead. Otherwize, 1 is returned.
 ###
 function checkFileProcessingStatus ()
 {
     declare -r PPID=$1
     declare -r PID=$2
     declare -r FILENAME="$3"
-    
-    declare -r BAD_MESSAGE="Process ${PID} of parent ${PPID} is taking too long to process ${FILENAME}!"
-    declare -r GOOD_MESSAGE="Process ${PID} of parent ${PPID} finished processing file ${FILENAME}. All good."
 
     if isProcess $lastJobPid
     then
-        logToApp "warning" "$BAD_MESSAGE"
+        logToApp "warning" "Process ${PID} of parent ${PPID} is taking too long to process ${FILENAME}!"
         # Send alert or message to admin.
         return 0
     else
-        logToApp "info" "$GOOD_MESSAGE"
+        logToApp "Process ${PID} of parent ${PPID} finished processing file ${FILENAME}. All good."
     fi
     
     return 1
 }
 
 ##
-# Kill a CPU process that has taken too long.
+# Kill a process that has taken too long.
 #
 # @author Anthony E. Rutledge
 # @version 1.0
@@ -99,24 +96,24 @@ function checkFileProcessingStatus ()
 # @param string $2 The process ID
 # @param string $3 The absolute path name of the file being processed.
 #
-# @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
+# @return bool Returns 0 if process was killed. Otherwize, 1 is returned.
 ###
 function stopProcessingFile ()
 {
     declare -r PPID=$1
     declare -r PID=$2
     declare -r FILENAME="$3"
-    
-    declare -r GOOD_MESSAGE="Intentionally killed child process ${PID} of parent ${PPID} while processing ${FILENAME}!"
-    declare -r BAD_MESSAGE="Unable to kill child process ${PID} of parent ${PPID}. May still be processing ${FILENAME}!"
 
     if killPidFamily $PID
     then
-        logToApp "notice" "$GOOD_MESSAGE"
+        logToApp "notice" "Intentionally killed child process ${PID} of parent ${PPID} while processing ${FILENAME}!"
+        return 0
     else
-        logToApp "alert" "$BAD_MESSAGE"
+        logToApp "alert" "Unable to kill child process ${PID} of parent ${PPID}. May still be processing ${FILENAME}!"
         # Send alert or message to admin.
     fi
+
+    return 1
 }
 
 ##
@@ -244,7 +241,6 @@ function moveBadFile ()
     logToApp "warning" "Notice: Moved file $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
     return 0
 }
-
 
 ##
 # Move a file that has been successfully processed to the
