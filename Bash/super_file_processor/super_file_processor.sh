@@ -184,18 +184,29 @@ function moveGoodFile ()
     
     declare -r baseFilename=$(basename $ABSOLUTE_FILENAME)
     declare -r newFinishedFilename="${FINISHED_DIR}${baseFilename}"
-    
-    declare -r BAD_MESSAGE="Alert: Unable to move $ABSOLUTE_FILENAME to its finished directory! PID=${PID} PPID=${PPID}"
 
     if [[ ! isDirectory "$FINISHED_DIR" ]]  #--> library/Datatypes/File.isDirectory
     then
-        mkdir -p "$FINISHED_DIR"
+        if [[ ! mkdir -p "$FINISHED_DIR" ]]
+        then
+            logToApp "err" "Unable to create the directory: ${FINISHED_DIR}.\nCheck directory permissions."
+            return 1
+        fi
     fi
 
-    if [[ ! mv -f $ABSOLUTE_FILENAME $FINISHED_DIR ]] || [[ ! isFile $newFinishedFilename ]] #--> library/Datatypes/File.isFile
+    if [[ ! mv -f $ABSOLUTE_FILENAME $FINISHED_DIR ]]
     then
-        logToApp "alert" "$BAD_MESSAGE"
+        logToApp "alert" "Alert: Unable to move $ABSOLUTE_FILENAME to its finished directory! PID=${PID} PPID=${PPID}"
+        return 2
     fi
+
+    if [[ ! isFile $newFinishedFilename ]] #--> library/Datatypes/File.isFile
+    then
+        logToApp "alert" "The file ${newFinishedFilename} was not written to the filesystem!"
+        return 3
+    fi
+
+    return 0
 }
 
 ##
