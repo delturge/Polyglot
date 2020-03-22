@@ -319,6 +319,7 @@ function processFiles ()
     decalre originalWorkingDir
     declare absoluteFilePath
     declare lastJobPid
+    declare -i filesProcessed=0
 
     # Ensure that the target directory is ready to be processed.
     if [[ ! isTargetDirReady "$TARGET_DIR" ]]
@@ -326,9 +327,13 @@ function processFiles ()
         return 1
     fi
 
+    declare -ir TOTAL_NUMBER_OF_FILES=$(countFiles "$TARGET_DIR") #--> ../libraries/datatypes/File.sh-->countFiles
+
+
     # You must turn on null globbing to account for the empty directory edge case
     # while using * to loop through the contents of a directory with a for loop.
     # Otherwise, * itself will be looped over as a literal "*".
+
 
     # Check to see if null globing is already set.
     if ! shopt -q nullglob
@@ -343,7 +348,7 @@ function processFiles ()
     if [[ ! cd "$TARGET_DIR" ]]
     then
         logToApp "err" "Unable to change working directory to $TARGET_DIR"
-        return 4
+        return 2
     fi
 
     # Iterate over all files in $TARGET_DIR
@@ -358,7 +363,10 @@ function processFiles ()
         # Monitor file processing in the foreground. #--> ../library/Entities/Process.limitProcessRuntime
         if limitProcessRuntime $lastJobPid $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS
         then
-            moveGoodFile $CURRENT_PID $lastJobPid "$absoluteFilePath" "$FINISHED_DIR"
+            if [[ moveGoodFile $CURRENT_PID $lastJobPid "$absoluteFilePath" "$FINISHED_DIR" ]]
+            then
+                (( filesProcessed++ ))
+            fi
         else
             if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid "$absoluteFilePath"
             then
@@ -369,8 +377,15 @@ function processFiles ()
     done
 
     cd "$originalWorkingDir"
-    return 0
+
+    if (( filesProcessed == TOTAL_NUMBER_OF_FILES ))
+    then
+        return 0
+    fi
+
+    returm 3
 }
+
 ##
 # Processes all target directories.
 #
@@ -481,7 +496,7 @@ function processDirectories ()
         fileProcessingFunction="process${fileTypeDir}"     # The name of the function to process the targetDir
 
         # Add log entry header. GitHub does not recognize <<- for here docs!
-        cat << EOF 1>>&2
+        cat <<- EOF 1>>&2
         ==========
         JOB START: 
         $(getDateTime) "$targetDir" $(hostname) $(hostname -i | awk '{print $2}') # Date Directory hostname IP: (DRY, make function.)
@@ -504,7 +519,7 @@ EOF
         fi
 
         # Add log entry footer.
-        cat << EOF 1>>&2
+        cat <<- EOF 1>>&2
         $(getDateTime) $targetDir $(hostname) $(hostname -i | awk '{print $2}')
         $(getProcessReport $CURRENT_PID)
         JOB END: 
@@ -519,7 +534,7 @@ EOF
     fi
 
     logToApp "warning" "File processing issues in at: ${errorDirs[*]}"
-    return 3
+    return 1
 }
 
 ##
