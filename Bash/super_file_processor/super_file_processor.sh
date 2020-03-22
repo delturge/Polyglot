@@ -655,7 +655,7 @@ function main ()
     [maxProcessChecks]=$maxProcessChecks
     [maxDelaySeconds]=$maxDelaySeconds)
     
-    if ! validateCommandInput "${USER_INPUT[@]}"
+    if [[ ! validateCommandInput "${USER_INPUT[@]}" ]]
     then
         logToSystem "notice" "super_file_processor was invoked with invalid values for the arguments!"
         exit 3
