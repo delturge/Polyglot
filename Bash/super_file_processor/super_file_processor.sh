@@ -325,7 +325,7 @@ function processFiles ()
     declare lastJobPid
 
     # Ensure that the target directory is ready to be processed.
-    if [[ ! isTargetDirReady "$FINISHED_DIR" ]]
+    if [[ ! isTargetDirReady "$TARGET_DIR" ]]
     then
         return 1
     fi
