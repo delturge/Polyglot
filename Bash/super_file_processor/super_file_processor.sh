@@ -546,20 +546,23 @@ function main ()
     [maxFileProcessingSeconds]=$maxFileProcessingSeconds
     [maxProcessChecks]=$maxProcessChecks
     [maxDelaySeconds]=$maxDelaySeconds)
-
-    if validateCommandInput "${USER_INPUT[@]}"
+    
+    if ! validateCommandInput "${USER_INPUT[@]}"
     then
-        # This could be made iterative, allowing one to reach
-        # maxFilesPerDir, then come back to a directory after all of
-        # the other kinds of files have been processed.
-        # It depends on the scenario. You can also just run
-        # super_file_processor iteratively, too.
-        processDirectories "${USER_INPUT[@]}"
+        logToSystem "notice" "super_file_processor was invoked with invalid values for the arguments!"
+        exit 3
+    fi
+
+    # This could be made iterative, allowing one to reach
+    # maxFilesPerDir, then come back to a directory after all of
+    # the other kinds / directories of files have been processed.
+
+    if processDirectories "${USER_INPUT[@]}"
+    then
         exit 0
     fi
-    
-    logToSystem "notice" "super_file_processor was invoked with invalid values for the arguments!"
-    exit 1
+
+    exit 4
 }
 
 ################################################################################
