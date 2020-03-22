@@ -147,15 +147,6 @@ function moveBadFile ()
     declare -r GOOD_MESSAGE="Notice: Moved file $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
     declare -r BAD_MESSAGE="Alert: Unable to move $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
 
-    if [[ ! isDirectory "$ERROR_DIR" ]]  #--> library/Datatypes/File.isDirectory
-    then
-        if [[ ! mkdir -p "$ERROR_DIR" ]]
-        then
-            logToApp "err" "Unable to create the directory: ${$ERROR_DIR}.\nCheck directory permissions."
-            return 1
-        fi
-    fi
-
     if [[ ! mv -f $ABSOLUTE_FILENAME $ERROR_DIR ]]
     then
         logToApp "alert" "Alert: Unable to move $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
@@ -197,15 +188,6 @@ function moveGoodFile ()
     
     declare -r baseFilename=$(basename $ABSOLUTE_FILENAME)
     declare -r newFinishedFilename="${FINISHED_DIR}${baseFilename}"
-
-    if [[ ! isDirectory "$FINISHED_DIR" ]]  #--> library/Datatypes/File.isDirectory
-    then
-        if [[ ! mkdir -p "$FINISHED_DIR" ]]
-        then
-            logToApp "err" "Unable to create the directory: ${FINISHED_DIR}.\nCheck directory permissions."
-            return 1
-        fi
-    fi
 
     if [[ ! mv -f $ABSOLUTE_FILENAME $FINISHED_DIR ]]
     then
