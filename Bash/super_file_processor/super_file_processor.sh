@@ -31,6 +31,7 @@ fi
 # Assign file descriptor number 2 to the application log: /var/log/<yourApp>/error.log
 if [[ ! exec 2>> "${appErrorLog}" ]]
 then
+    echo -e "$(whoami) is unable to open $appErrorLog for logging.\nCheck file permissons." 1>&2
     exit 2
 fi
 
