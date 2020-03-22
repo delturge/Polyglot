@@ -274,6 +274,18 @@ function processFiles ()
     declare absoluteFilePath
     declare lastJobPid
 
+    # Ensure that the destination for files processed successfully is ready.
+    if [[ ! destinationDirReady "$FINISHED_DIR" ]]
+    then
+        return 1
+    fi
+
+    # Ensure that the destination for bad files is ready.
+    if [[ ! destinationDirReady "$ERROR_DIR" ]]
+    then
+        return 2
+    fi
+
     # You must turn on null globbing to account for the empty directory edge case
     # while using * to loop through the contents of a directory with a for loop.
     # Otherwise, * itself will be looped over as a literal "*".
@@ -288,7 +300,7 @@ function processFiles ()
     # Where the files to be processed are located.
     cd "$TARGET_DIR"
 
-    # Iterate over all files in the $TARGET_DIRECTORY
+    # Iterate over all files in the $TARGET_DIR.
     for filename in *
     do
         absoluteFilePath="${TARGET_DIR}${filename}"
@@ -309,6 +321,8 @@ function processFiles ()
             fi
         fi
     done
+    
+    return $?
 }
 
 ##
