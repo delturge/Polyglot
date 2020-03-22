@@ -528,9 +528,9 @@ function main ()
             k) fileSortKey=$OPTARG
             o) fileSortOrder=$OPTARG
             q) maxFilesPerDir=$OPTARG
-            s) maxFileProcessingSeconds=$OPTORG
-            c) maxProcessChecks=$OPTORG
-            d) maxDelaySeconds=$OPTORG
+            s) maxFileProcessingSeconds=$OPTARG
+            c) maxProcessChecks=$OPTARG
+            d) maxDelaySeconds=$OPTARG
             :) echo "Invalid argument to: $option"
            \?) echo "Invaild option supplied. Must be r, K, O, k, o, q, s, c, and/or d !!"
         esac
