@@ -120,6 +120,84 @@ function stopProcessingFile ()
 }
 
 ##
+# Ensures that the target directory exists, and has execute and read permissions.
+#
+# @author Anthony E. Rutledge
+# @version 1.0
+# @copyright (c) 2020, Anthony E. Rutledge
+#
+# @param string $1 The target directory.
+#
+# @return bool Returns 0 if target dir exist, and has execute and read permissions.
+#              Otherwise, a non-zero value is returned.
+###
+function targetDirReady ()
+{
+    declare -r TARGET_DIR=$1
+
+    # Does the director exist?
+    if [[ ! isDirectory "$TARGET_DIR" ]]  #--> library/Datatypes/File.isDirectory
+    then
+        logToApp "err" "The directory $TARGET_DIR does not exist!"
+        return 1
+    fi
+
+    # Execute permission on a directory allows you to cd into it.
+    if [[ ! isExecutable "$TARGET_DIR" ]]
+    then
+        logToApp "err" "The directory $TARGET_DIR does not have execute permission for $(whoami)."
+        return 2
+    fi
+
+    # Read permission allows you to list the contents of a directory.
+    if [[ ! isReadable "$TARGET_DIR" ]]
+    then
+        logToApp "err" "The directory $TARGET_DIR does not have read permission for $(whoami)."
+        return 3
+    fi
+
+    return 0
+}
+
+##
+# Ensures that the final destintions for files exist.
+#
+# @author Anthony E. Rutledge
+# @version 1.0
+# @copyright (c) 2020, Anthony E. Rutledge
+#
+# @param string $1 The destination directory.
+#
+# @return bool Returns 0 destination dir exist and is writeable, non-zero otherwise.
+###
+function isDestinationDirReady ()
+{
+    declare -r DESTINATION_DIR="$1"
+
+    # Does the director exist?
+    if [[ ! isDirectory "$DESTINATION_DIR" ]]  #--> library/Datatypes/File.isDirectory
+    then
+        logToApp "err" "The directory $DESTINATION_DIR does not exist! Attempting to create."
+
+        # Try to create the directory.
+        if [[ ! mkdir -p "$DESTINATION_DIR" ]] # It is possible to set file mode with mkdir, too.
+        then
+            logToApp "err" "Unable to create the directory: ${DESTINATION_DIR}.\nCheck directory permissions."
+            return 1
+        fi
+    fi
+
+    # Is the directory writable?
+    if [[ ! isWriteable "$DESTINATION_DIR" ]]
+    then
+        logToApp "err" "The directory $DESTINATION_DIR is not writeable by $(whoami)."
+        return 2
+    fi
+
+    return 0
+}
+
+##
 # Move a file that has taken to long to process to the
 # "blah/blah/output/errors/${fileTypeDir}/" directory.
 #
@@ -141,28 +219,32 @@ function moveBadFile ()
     declare -r ABSOLUTE_FILENAME="$3"
     declare -r ERROR_DIR="$4"
     
-    declare -r baseFilename$(basename $ABSOLUTE_FILENAME)
+    declare -r baseFilename$(basename "$ABSOLUTE_FILENAME")
     declare -r newErrorFilename="${ERROR_DIR}${baseFilename}"
-    
-    declare -r GOOD_MESSAGE="Notice: Moved file $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
-    declare -r BAD_MESSAGE="Alert: Unable to move $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
 
-    if [[ ! mv -f $ABSOLUTE_FILENAME $ERROR_DIR ]]
+    if [[ ! isDestinationDirReady "$ERROR_DIR" ]]
+    then
+        return 1
+    fi
+
+    if [[ ! mv -f "$ABSOLUTE_FILENAME" "$ERROR_DIR" ]]
     then
         logToApp "alert" "Alert: Unable to move $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
         # Send alert or message admin.
         return 2
     fi
 
-    if [[ ! isFile $newErrorFilename  ]] #--> library/Datatypes/File.isFile
+    if [[ ! isFile "$newErrorFilename"  ]] #--> library/Datatypes/File.isFile
     then
         logToApp "alert" "The file ${newErrorFilename} was not written to the filesystem!"
         # Send alert or message admin.
         return 3
     fi
 
+    logToApp "warning" "Notice: Moved file $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
     return 0
 }
+
 
 ##
 # Move a file that has been successfully processed to the
@@ -174,7 +256,7 @@ function moveBadFile ()
 #
 # @param string $1 The parent process ID
 # @param string $2 The process ID
-# @param string $3 The absolute path name of the file being processed.
+# @param string $3 The absolute path name of the file being moved.
 # @param string $4 The absolute path of the destination directory for good files.
 #
 # @return bool Returns 0 the file was moved successfully, non-zero otherwise.
@@ -186,57 +268,24 @@ function moveGoodFile ()
     declare -r ABSOLUTE_FILENAME="$3"
     declare -r FINISHED_DIR="$4"
     
-    declare -r baseFilename=$(basename $ABSOLUTE_FILENAME)
+    declare -r baseFilename=$(basename "$ABSOLUTE_FILENAME")
     declare -r newFinishedFilename="${FINISHED_DIR}${baseFilename}"
 
-    if [[ ! mv -f $ABSOLUTE_FILENAME $FINISHED_DIR ]]
+    if [[ ! isDestinationDirReady "$FINISHED_DIR" ]]
+    then
+        return 1
+    fi
+
+    if [[ ! mv -f "$ABSOLUTE_FILENAME" "$FINISHED_DIR" ]]
     then
         logToApp "alert" "Alert: Unable to move $ABSOLUTE_FILENAME to its finished directory! PID=${PID} PPID=${PPID}"
         return 2
     fi
 
-    if [[ ! isFile $newFinishedFilename ]] #--> library/Datatypes/File.isFile
+    if [[ ! isFile "$newFinishedFilename" ]] #--> library/Datatypes/File.isFile
     then
         logToApp "alert" "The file ${newFinishedFilename} was not written to the filesystem!"
         return 3
-    fi
-
-    return 0
-}
-
-##
-# Ensures that the final destintions for files exist.
-#
-# @author Anthony E. Rutledge
-# @version 1.0
-# @copyright (c) 2020, Anthony E. Rutledge
-#
-# @param string $1 The destination directory.
-#
-# @return bool Returns 0 destinatino dir exist and is writeable, non-zero otherwise.
-###
-function destinationDirReady ()
-{
-    declare -r DESTINATION_DIR=$1
-
-    # Does the director exist?
-    if [[ ! isDirectory "$DESTINATION_DIR" ]]  #--> library/Datatypes/File.isDirectory
-    then
-        logToApp "err" "The directory $DESTINATION_DIR does not exist! Attempting to create."
-
-        # Try to create the directory.
-        if [[ ! mkdir -p "$DESTINATION_DIR" ]] # It is possible to set file mode with mkdir, too.
-        then
-            logToApp "err" "Unable to create the directory: ${DESTINATION_DIR}.\nCheck directory permissions."
-            return 1
-        fi
-    fi
-
-    # Is the directory writable?
-    if [[ ! isWriteable "$DESTINATION_DIR" ]]
-    then
-        logToApp "err" "The directory $DESTINATION_DIR is not writeable by $(whoami). Change the file mode."
-        return 2
     fi
 
     return 0
@@ -271,19 +320,14 @@ function processFiles ()
     declare -r FINISHED_DIR="$6"
     declare -r ERROR_DIR="$7"
 
+    decalre originalWorkingDir
     declare absoluteFilePath
     declare lastJobPid
 
-    # Ensure that the destination for files processed successfully is ready.
-    if [[ ! destinationDirReady "$FINISHED_DIR" ]]
+    # Ensure that the target directory is ready to be processed.
+    if [[ ! isTargetDirReady "$FINISHED_DIR" ]]
     then
         return 1
-    fi
-
-    # Ensure that the destination for bad files is ready.
-    if [[ ! destinationDirReady "$ERROR_DIR" ]]
-    then
-        return 2
     fi
 
     # You must turn on null globbing to account for the empty directory edge case
@@ -297,10 +341,16 @@ function processFiles ()
         shopt -s nullglob
     fi
 
-    # Where the files to be processed are located.
-    cd "$TARGET_DIR"
+    originalWorkingDir=$(pwd)
 
-    # Iterate over all files in the $TARGET_DIR.
+    # Where the files to be processed are located.
+    if [[ ! cd "$TARGET_DIR" ]]
+    then
+        logToApp "err" "Unable to change working directory to $TARGET_DIR"
+        return 4
+    fi
+
+    # Iterate over all files in $TARGET_DIR
     for filename in *
     do
         absoluteFilePath="${TARGET_DIR}${filename}"
@@ -309,22 +359,22 @@ function processFiles ()
         $FILE_PROCESSING_FUNCTION "$filename" &
         lastJobPid=$!
 
-        # Monitor file processing in the foreground. #--> library/Entities/Process.limitProcessRuntime
+        # Monitor file processing in the foreground. #--> ../library/Entities/Process.limitProcessRuntime
         if limitProcessRuntime $lastJobPid $MAX_PROCESSING_SECONDS $MAX_PROCESS_CHECKS $MAX_DELAY_SECONDS
         then
-            moveGoodFile $CURRENT_PID $lastJobPid $absoluteFilePath $FINISHED_DIR
+            moveGoodFile $CURRENT_PID $lastJobPid "$absoluteFilePath" "$FINISHED_DIR"
         else
-            if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid $absoluteFilePath
+            if checkFileProcessingStatus $CURRENT_PROCESS_ID $lastJobPid "$absoluteFilePath"
             then
-                stopProcessingFile $CURRENT_PID $lastJobPid $absoluteFilePath
-                moveBadFile $CURRENT_PID $lastJobPid $absoluteFilePath $ERROR_DIR
+                stopProcessingFile $CURRENT_PID $lastJobPid "$absoluteFilePath"
+                moveBadFile $CURRENT_PID $lastJobPid "$absoluteFilePath" "$ERROR_DIR"
             fi
         fi
     done
-    
-    return $?
-}
 
+    cd "$originalWorkingDir"
+    return 0
+}
 ##
 # Processes all target directories.
 #
