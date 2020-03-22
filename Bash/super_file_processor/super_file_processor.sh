@@ -140,7 +140,7 @@ function moveBadFile ()
     declare -r ABSOLUTE_FILENAME="$3"
     declare -r ERROR_DIR="$4"
     
-    declare -r baseFilename$(basename $ABSOLUTE_FILENAME)
+    declare -r baseFilename=$(basename $ABSOLUTE_FILENAME)
     declare -r newErrorFilename="${ERROR_DIR}${baseFilename}"
     
     declare -r GOOD_MESSAGE="Notice: Moved file $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
@@ -182,8 +182,8 @@ function moveGoodFile ()
     declare -r ABSOLUTE_FILENAME="$3"
     declare -r FINISHED_DIR="$4"
     
-    declare -r baseFilename$(basename $ABSOLUTE_FILENAME)
-    declare -r newFinishedFilename="${ERROR_DIR}${baseFilename}"
+    declare -r baseFilename=$(basename $ABSOLUTE_FILENAME)
+    declare -r newFinishedFilename="${FINISHED_DIR}${baseFilename}"
     
     declare -r BAD_MESSAGE="Alert: Unable to move $ABSOLUTE_FILENAME to its finished directory! PID=${PID} PPID=${PPID}"
 
