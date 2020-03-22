@@ -129,7 +129,8 @@ function stopProcessingFile ()
 #
 # @param string $1 The parent process ID
 # @param string $2 The process ID
-# @param string $3 The absolute path name of the file being processed.
+# @param string $3 The absolute path of the target file being moved.
+# @param string $4 The absolute path of the destination directory for bad files.
 #
 # @return bool Returns 0 if all files were processed. Otherwize, non-zero is returned.
 ###
@@ -140,7 +141,7 @@ function moveBadFile ()
     declare -r ABSOLUTE_FILENAME="$3"
     declare -r ERROR_DIR="$4"
     
-    declare -r baseFilename=$(basename $ABSOLUTE_FILENAME)
+    declare -r baseFilename$(basename $ABSOLUTE_FILENAME)
     declare -r newErrorFilename="${ERROR_DIR}${baseFilename}"
     
     declare -r GOOD_MESSAGE="Notice: Moved file $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
@@ -148,18 +149,29 @@ function moveBadFile ()
 
     if [[ ! isDirectory "$ERROR_DIR" ]]  #--> library/Datatypes/File.isDirectory
     then
-        mkdir -p "$ERROR_DIR"
+        if [[ ! mkdir -p "$ERROR_DIR" ]]
+        then
+            logToApp "err" "Unable to create the directory: ${$ERROR_DIR}.\nCheck directory permissions."
+            return 1
+        fi
     fi
 
-    if [[ mv -f $ABSOLUTE_FILENAME $ERROR_DIR ]] && [[ isFile $newErrorFilename  ]] #--> library/Datatypes/File.isFile
+    if [[ ! mv -f $ABSOLUTE_FILENAME $ERROR_DIR ]]
     then
-        logToApp "notice" "$GOOD_MESSAGE"
-    else
-        logToApp "alert" "$BAD_MESSAGE"
+        logToApp "alert" "Alert: Unable to move $ABSOLUTE_FILENAME to its error directory! PID=${PID} PPID=${PPID}"
         # Send alert or message admin.
+        return 2
     fi
-}
 
+    if [[ ! isFile $newErrorFilename  ]] #--> library/Datatypes/File.isFile
+    then
+        logToApp "alert" "The file ${newErrorFilename} was not written to the filesystem!"
+        # Send alert or message admin.
+        return 3
+    fi
+
+    return 0
+}
 
 ##
 # Move a file that has been successfully processed to the
