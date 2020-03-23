@@ -1,0 +1,143 @@
+Anthony E. Rutledge
+CIS 248
+Gary Seamans
+01/26/2007
+
+                  Lesson 3 Chapters 5 & 6 
+
+	o This assignment covers chapters 5 & 6 
+
+1.  Should you depend on the order of element in a hash? Why?
+
+	A developer creating programs with Perl, that contains
+	hashes, should not depend on the order of elements. Perl
+	does not place restrictions on the size or number of 
+        elements in a hash. In order to preserve efficiency, Perl
+	stores the elements by use of an algorithm that provides
+        fast access.
+
+2.  Show the command to create a hash, passwords, containing the
+    key/value pairs: 
+    "barney/llama betty/camel wilma/llama fred/alpaca"
+    Use a single statement.
+
+	%passwords = qw{
+			barney llama 
+			betty camel 
+			wilma llama 
+			fred alpaca
+		      };
+
+3.  What command would you use to print out the value "camel"
+    using the passwords hash from question #2?
+
+	print $passwords{betty};
+
+4.  What commands would you use to print out all of the keys
+    from the passwords hash from question #2?
+    The printout should look similar to the one below:
+    The key list for passwords: fred barney betty wilma
+
+
+	(@passwords_keys = (keys %passwords));
+	print "The key list for passwords: @passwords_keys";    
+
+
+5.  What commands would you use to print out all of the values
+    from the passwords hash from question #2?
+    The print out should be similar to the one below:
+    The value list for passwords: llama camel llama alpaca
+
+    
+	(@passwords_values = (values %passwords));
+	print "The value list for passwords: @passwords_values";
+
+
+6.  What command would you use to delete the key/value pair
+    fred/alpaca from the passwords hash from question #2?
+
+	delete $passwords{"fred"};
+
+
+7.  What command would you use to add the key/value pair
+    red/apple to the passwords hash from question #2?
+
+	$passwords{"red"} = "apple";
+
+    ##### The following questions require techniques from 
+    #####  both chapter 5 and 6 to answer.
+
+
+
+8.  Write a perl script called q8.pl that reads strings from
+    standard input, maps them to the password hash, and prints
+    out the hash value in the passwords hash or 
+    "<word> is not in the passwords hash". A sample run follows:
+
+    q8.pl 
+    fred
+    "fred" maps to "camel" in the passwords hash.
+    bob
+    bob is not in the passwords hash.
+    wilma
+    "wilma" maps to "llama" in the passwords hash.
+    ^Z
+
+    (Note: The above was run on Windows, to end the input on
+    UNIX/Linux use <ctrl>-d).
+
+    Technical constraints:
+
+    o Use a while loop to keep the program going until the user
+      enters a <ctrl>-Z or <ctrl>-d, Windows/Linux.
+
+    o Use an if/else statement to print the messages.
+
+    Hints:
+
+    o Look at the while loop on the top of page 89.
+    o Review the answer to exercise 1 from chapter 5.
+    o Don't forget that when you read something in from <STDIN> it
+      still contains a newline, '\n', character at the end.
+           
+            SEE q8.pl
+
+9.    Show the commands to write an if/else statement that will print "Key
+       found." If the the key "barney" exists in the hash from
+       question #2 or "Key not found." if  the key "barney" does not
+       exist in the hash from question #2. 
+
+	SEE q9.pl
+
+10. Write a perl script, q10.pl, that reads in files specified
+    on the command line, places each line from the files into
+    an array, and prints out the total lines read and then
+    each line read. A sample run follows:
+    
+    q10.pl something.secret
+    Total lines in the files: 8.
+    fred
+    camel
+    barney
+    llama
+    betty
+    alpaca
+    wilma
+    alpaca
+
+     Technical constraints:
+
+     o Your printout should look like the above.
+     o Place each line from the file into the array
+       individually after removing the newline.
+     
+     Hints:
+
+     o You could use the push function while reading in the
+       files to populate the array.
+     o Don't forget that in a scalar context an array returns
+       the number of elements.
+     o Review the examples on page 89 and the exercise
+       answers before attempting this script.
+
+	SEE q10.pl
