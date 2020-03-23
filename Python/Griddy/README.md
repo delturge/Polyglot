@@ -4,6 +4,7 @@ What is Griddy?
 Griddy is a geocoding program.
 
 https://pypi.org/project/geocoder/
+
 https://en.wikipedia.org/wiki/Geocoding
 
 It takes real world locations and determines if they fall
