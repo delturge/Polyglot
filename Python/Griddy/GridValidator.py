@@ -23,6 +23,8 @@ class GridValidator(CoordinateValidator):
 
         if not self.isEqual(gridDict['topRight']['long'], gridDict['botRight']['long']):
             raise RuntimeError('The right angles of the target area are not on the same geographic meridian!')
+            
+        return
 
     # A method that checks the format of the submitted coordinate pairs.
     def __checkCoordFormat(self, gridDict):
@@ -38,6 +40,8 @@ class GridValidator(CoordinateValidator):
 
             if not self.isIn('long', value):
                 raise RuntimeError('The ' + key + ' angle for longitude is missing!');
+                
+        return
 
     # A method that checks the format of the submitted grid itself.
     def __checkGridFormat(self, gridDict):
@@ -50,6 +54,8 @@ class GridValidator(CoordinateValidator):
         for key in gridDict:
             if not self.isIn(key, gridDict):
                 raise RuntimeError('The ' + key + 'coordinate of the grid is missing!');
+                
+        return
 
     # A method that determines of four cooridate pairs actually represents a Grid.
     def isGrid(self, gridDict):
