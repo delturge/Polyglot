@@ -29,14 +29,14 @@ class GeoGrid(Grid):
     #
     # @return GeoGrid
     ###
-    def __init__(self, gridValidator, geocoder, geocoderValidator, textFileReader, coordinateConverter, geoConsoleView, cmdLineValidator):
+    def __init__(self, gridValidator, geocoder, geocoderValidator, textFileReader, coordinateConverter, geoConsoleView, griddyCmdLineValidator):
         super().__init__(gridValidator)
         self.__geocoder = geocoder
         self.__geocoderValidator = geocoderValidator
         self.__file = textFileReader
         self.__converter = coordinateConverter
         self.__view = geoConsoleView
-        self.__cmdLineValidator = cmdLineValidator
+        self.__cmdLineValidator = griddyCmdLineValidator
 
         self.__addressList = []     # Where addresess from a file are stored.
         self.__geoResultsList = []  # Where objects returned from Geocoder are stored.
