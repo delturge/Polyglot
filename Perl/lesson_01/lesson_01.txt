@@ -1,0 +1,95 @@
+Anthony E. Rutledge
+CIS 248
+Gary Seamans
+01/10/2007
+
+
+                       Lesson 1 Chapters 1 & 2
+
+
+1.  What does Perl stand for?
+
+      Perl stands for the Practical Extraction and Report Language.
+
+
+2.  What is the difference between single quoted and double
+    quoted strings?
+ 
+      Perl interprets the contents of single quoted strings literally,
+      providing exceptions for printing single quotation marks (\') and 
+      backslashes (\\). Double quoted strings allow for variable 
+      subsitution which. In this way, double quoted strings are more
+      flexible.
+ 
+3.  How are statements terminated in Perl?
+
+      In Perl, statements are terminated with semicolons.
+
+
+4.  What is scalar data?
+
+      Scalar data is an instance of a particular data type. Scalar
+      data can be manipulated, stored in variables, and can be
+      read and written, to and from, various sources.
+
+5.  How do you get a single quote into a single quoted string? Show an
+    example.
+
+       For a single quote to appear within a single quoted string, you
+       must use a backslash (escape sequence).
+
+          print 'Printing a single quote \'';
+
+6.  What does the line: "chomp($a = <STDIN>)" do?
+
+       In order of precedence:
+
+          1. Requests data from the standard input
+          2. Assigns that data to the scalar variable $a.
+          3. Removes the "invisible" new-line sequence that
+             was appended to the data after pressing "enter"
+             on the keyboard.
+
+7.  Write a Perl script, called q7.pl, that prompts the user for their name and
+    age in years. The program will then print the users name and 
+    age age/3 times. (That is the user's age divided by 3)
+    
+    Constraints:
+    
+    1. Use only techniques covered in chapters 1 & 2 no looping constructs are required.
+    
+    
+    The following is an example script execution.
+
+    For the input:
+
+   	perl q7.pl
+	Name: Gary Seamans
+	Age: 32
+	The result is:
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+	Hello Gary Seamans you are 32 years old
+
+      SEE ENCLOSED FILE
+
+8.  -65e24 is a ___________________ literal.  
+
+        FLOATIING POINT
+
+9.  The value -425 is TRUE in Perl. 
+  
+        TRUE. Zero is the only number that is false.
+
+
+10. The ______is the string concatenation operator.
+
+        The period (.) is the string concatenation operator.
+
