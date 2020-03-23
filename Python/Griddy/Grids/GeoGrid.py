@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from Grid import Grid
 import requests
 
