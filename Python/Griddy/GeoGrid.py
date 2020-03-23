@@ -163,6 +163,7 @@ class GeoGrid(Grid):
         self.setGrid(gridDict)                             # Set the boundaries for the grid.
         self.__loadAddresses(self.__getAddressLines)       # A function passed in to perform the service of getting the address lines.
         self.__file.close()                                # Close file, if it needs to be.
+        return
 
     ##
     # Prcessses address data by converting it to geo-spatial coordinates (lat / long)
@@ -197,6 +198,8 @@ class GeoGrid(Grid):
             self.__view.showNoAddresses()
         else:
             self.__view.showAddresses()
+        
+        return
 
     ##
     # The main line of the program.
