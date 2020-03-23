@@ -1,0 +1,32 @@
+import os
+import io
+
+from Validator import Validator
+
+# A class for validating basic aspects of files.
+
+class FileValidator(Validator):
+
+    def __init__(self):
+        super().__init__()
+
+    def exists(self, filePath):
+        return os.path.exists(filePath)
+
+    def isEmpty(self, filePath):
+        return self.isEqual(os.path.getsize(filePath), 0)
+
+    def isRegular(self, filePath):
+        return os.path.isfile(filePath)
+
+    def isReadable(self, filePath):
+        return os.access(filePath, os.R_OK)
+
+    def isRealFullFile(self, filePath):
+        return (self.exists(filePath) and
+               self.isRegular(filePath) and
+               (not self.isEmpty(filePath)) and
+               self.isReadable(filePath))
+
+    def isStringIO(self, handle):
+        return isinstance(handle, io.TextIOBase)
