@@ -1,0 +1,230 @@
+Anthony E. Rutledge
+CIS 248
+Gary Seamans
+02/15/2007
+
+
+
+                                 Lesson 6 
+                           Chapters 11, 12 & 13
+ 
+
+1.  Write a perl program, q1.pl, that prompts the user for a password,
+    user ID, user Number, and name. The program will then append a new
+    line to the end of the file. The new line will use the values from
+    the "grs" user except for the new user ID, user Number, password,
+    and name.
+
+    The format of the passwd.txt file follows:
+
+    <user id>:<password>:<user number>:<group number>:<name>:<home dir>:<shell>
+
+    Technical constraints:
+
+    o Use the "strict" pragma.
+    o Test to see if the file exists and is writeable. If it is not,
+      then print an advisory message for the user and exit the script.
+    o Use a variable to hold the name "passwd.txt" for the file.
+    o Use at least three user defined subroutines. See the Hints 
+      sections for ideas.
+
+    Hints:
+
+    o You will have to both read and write the file. Read to get the
+      user grs's information, write to put the new information at the
+      end of the file.
+    o Use split and join to create the new line.
+    o You can logically break up this program into the following
+      sections:
+         1. test for the existance of the passwd file.
+         2. process the file to find the "grs" line and save it.
+         3. prompt the user for their data.
+         4. put the line together
+         5. append the new line to the passwd.txt file
+
+    Sample Run:
+
+    ######### START ##############
+    q1.pl
+
+    Found the passwd.txt and I can read/write to it.
+
+    Enter the user ID: alvin  
+
+    Enter the password: chestnuts
+
+    Enter the user number: 123
+
+    Enter the user's name: Alvin Chipmunk
+
+    ########## END ###############
+
+    Line that was appended to the end of the file:
+
+    
+    alvin:chestnuts:123:200:Alvin Chipmunk:/export/home/grs:/bin/ksh
+
+
+================================================================
+Assume the following directory structure for the questions that
+follow:
+
+c:\school\cis248\lessons\test\lesson5    (Windows)
+                    or
+/school/cis248/lessons/test/lesson5      (UNIX/Linux)
+
+(Note: If you are writing your lessons on Pyrite or other Linux/UNIX box
+you can prepend your home directory path to the above. (e.g. On Opal
+my account is grs so the above would become: 
+/export/home/seamansg/school/cis248/lessons/test/lesson5)
+
+
+   SEE q1.pl
+
+
+2. Write a short Perl script, q2.pl, that will list all files in the
+"lesson5" directory that start with "file" and end with a "5",
+(e.g. If the directory contained files called: file15  file33  file35
+ and file44. A run of the program should look like:
+ q2.pl
+
+ The files are: test/lesson5/file15 test/lesson5/file35
+)
+
+Technical constraints:
+
+   o Use the "use strict;" pragma
+   o Use the techniques from chapter 12, no system calls.
+   o Assume that the script will be executed from the "Lessons"
+     directory and that it will NOT cd to the "lesson5" directory.
+   o Do not use the opendir command, use globbing commands.
+   o Use a relative path name in the script.
+
+
+   SEE q2.pl
+
+
+3. Show the Perl commands to change directory to the "lessons"
+directory from anywhere in the directory tree and then print the files
+in that directory to the screen.
+
+	chdir "/school/cis248/lessons";
+	opendir DIR, "./";
+	@files = readdir DIR;
+	print sort "@files";
+	closedir DIR; 
+
+
+4. Write the globbing commands to:
+
+   a. List all of the files in a directory.
+
+	<* .*>
+		
+   b. List files that begin with a "5" and end with ".txt".
+
+        <5*.txt>
+
+   c. List files that end with a number.
+
+	<*[0-9] .*[0-9]>
+
+   d. List files that contain the string "finance".
+
+	<*finance* .*finance*>
+
+
+5. Show the perl commands to use a directory handle to open and
+   print the names of all of the files in the directory "test/lesson5".
+
+	Assuming you are starting at the "lessons" directory:
+
+	$my_directory = "./test/lesson5";
+	opendir DIR, $my_directory;
+	@lesson5 = readdir DIR;
+	print sort @lesson5;
+	closedir DIR;
+
+
+6. Modify the script from question 2 above, call it q6.pl, to remove the slash
+before the file names. The same technical constraints apply.
+
+   A sample run should look like:
+
+   q6.pl
+
+   The file name is: file15
+   The file name is: file35
+
+	SEE q6.pl
+
+7.  Write a Perl script,q7.pl, that provides the user with a menu that
+    will permit the user to:
+    
+    a. Change directories.
+    b. List the files in the directory
+    c. Remove a file from the current directory
+       by typing in a name
+    d. Rename a file in the current directory
+       by typing in a name
+    e. Create a new directory.
+    f. Change the permissions on a file.
+    g. exit the program
+
+Technical constraints:
+    o Use the "use strict;" pragma.
+    o Use meaningful variable names.
+    o Use subroutines for a - f.
+    o Do not use system calls, use techniques from
+      chapters 11,12 & 13.
+    o Print a warning if the user tries to change
+      to an invalid directory.
+    o Print a warning if the user tries to rename
+      or remove a file that doesn't exist.
+    o Print a warning if the create directory fails
+    o Print a warning if changing the permission on
+      a file fails.
+    o The menu should be in a loop to allow multiple
+      iteration.
+
+Hints:
+
+    o Here is a program fragement that will provide the menu and
+      sample calls to subroutines. One subroutine template is
+      provided. Note the SWITCH label and the construct used for the
+      menu. Choice/Case/Switch should be familiar to you from your intro
+      to programming class. Perl, unlike many other languages, does not
+      have a built-in CASE or Switch construct. This is one method for
+      implementing a CASE construct in Perl.
+
+#!/usr/bin/perl
+# Example menu for lesson 8 question #1
+do {
+    print "*=================================*\n" .
+          "| 1) Change Directory             |\n" .
+          "| 2) List Files                   |\n" .
+          "| 3) Remove File                  |\n" .
+          "| 4) Rename File                  |\n" .
+          "| 5) Create Directory             |\n" .
+          "| 6) Change Permissions           |\n" .
+          "| 7) Quit                         |\n" .
+          "*=================================*\n" .
+          "Enter Choice: ";
+    chomp($choice = <STDIN>);
+  SWITCH: {
+      if($choice == 1) { changeDir();  last SWITCH; }
+      if($choice == 2) { listFiles();  last SWITCH; }
+      if($choice == 3) { removeFile(); last SWITCH; }
+      if($choice == 4) { renameFile(); last SWITCH; }
+      if($choice == 5) { createDir();  last SWITCH; }
+      if($choice == 6) { changePerms();  last SWITCH; }
+      print "\nInvalid choice: $choice...\n\n";
+  }
+}while($choice != 7);
+
+sub changeDir {
+  print "In changeDir() Press <enter> to continue\n";
+  <STDIN>; #To pause the script
+}
+
+	see q7.pl
