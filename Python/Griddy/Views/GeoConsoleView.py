@@ -8,12 +8,15 @@ class GeoConsoleView(View):
         super().__init__()
         self.__gridDict = gridDict
         self.__addressList = addressList
+        return
 
     def setGridDict(self, gridDict):
         self.__gridDict = gridDict
+        return
 
     def setAddressList(self, addressList):
         self.__addressList = addressList
+        return
 
     #A method for generating a report header.
     def __showReportHeader(self):
@@ -22,6 +25,7 @@ class GeoConsoleView(View):
               'South Latidude: ' + str(self.__gridDict['botLeft']['lat']) + '\n'
               'West Longitude: ' + str(self.__gridDict['topLeft']['long']) + ' \n'
               'East Longitude: ' + str(self.__gridDict['topRight']['long']) + '\n')
+        return
 
     # A method that produces output when there are no addresses to check.
     def showNoAddressData(self):
