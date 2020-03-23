@@ -10,8 +10,8 @@ Validators
 ==========
 
 1. Validator.py
-2. CoordinateValidator.py  <--- Degrees.py, Limits.py
-3a. GridValidator.py       <--- Limits.py
+2. CoordinateValidator.py (uses Degrees.py, Limits.py)
+3a. GridValidator.py      ( uses Limits.py)
 3b. GeocoderValidator.py
 
 1. Validator.py
