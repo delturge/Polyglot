@@ -1,77 +1,49 @@
-from Limits import Limits   # Enum. Not really, but ...
-from CoordinateValidator import CoordinateValidator
+from Limits import Limits     # Enum
+from Degrees import Degrees   # Enum
+from LatLongRegex import LatLongRegex as Pattern # Enum
+from Validator import Validator
 
-# A class for validating the proposed cooridnates (4) for a Grid.
-# Also, it can deterimine if a cooridnate is outside of a Grid.
+# A class for validating coordinate pairs.
 
-class GridValidator(CoordinateValidator):
-
+class CoordinateValidator(Validator):
+    
     def __init__(self):
         super().__init__()
+        
+    def hasCoordKeys(self, coordDict):
+        return ('lat' in coordDict) and ('long' in coordDict)
+        
+    def isCoordSet(self, angleStringList):
+        if not self.isList(angleStringList):
+            raise TypeError('Geographic coordinate pair is not in list form.')
 
-    # A method that checks the alignment of the points along
-    # north and south parallels, and east and west meridians.
-    def __checkCoordAlignment(self, gridDict):
-        if not self.isEqual(gridDict['topLeft']['lat'], gridDict['topRight']['lat']):
-            raise RuntimeError('The top angles of the target area are not on the same geographic parallel!')
+        if not self.isEqual(len(angleStringList), Limits.MAX_COORD_LENGTH.value):
+            raise ValueException('Geographic coordinates must come in sets of two (latitude, longitude)!')
+            
+        if not self.isPattern(Pattern.LATITUDE.value, angleStringList[0]) and self.isPattern(Pattern.LONGITUDE.value, angleStringList[1]):
+            raise TypeError('Geographic coordinates are malformed because they are not floating point values!')
 
-        if not self.isEqual(gridDict['botLeft']['lat'], gridDict['botRight']['lat']):
-            raise RuntimeError('The bottom angles of the target area are not on the same geographic parallel!')
-
-        if not self.isEqual(gridDict['topLeft']['long'], gridDict['botLeft']['long']):
-            raise RuntimeError('The left angles of the target area are not on the same geographic meridian!')
-
-        if not self.isEqual(gridDict['topRight']['long'], gridDict['botRight']['long']):
-            raise RuntimeError('The right angles of the target area are not on the same geographic meridian!')
-
-    # A method that checks the format of the submitted coordinate pairs.
-    def __checkCoordFormat(self, gridDict):
-        for key, value in gridDict.items():
-            if not self.isDict(value):
-                raise TypeError('The ' + key + ' coordinate is not an instance of a dictionary!')
-
-            if not self.isEqual(len(value), Limits.MAX_COORD_LENGTH.value):
-                raise RuntimeError('The ' + key + ' coordinate must only have two angles.')
-
-            if not self.isIn('lat', value):
-                raise RuntimeError('The ' + key + ' angle for latitude is missing!');
-
-            if not self.isIn('long', value):
-                raise RuntimeError('The ' + key + ' angle for longitude is missing!');
-
-    # A method that checks the format of the submitted grid itself.
-    def __checkGridFormat(self, gridDict):
-        if not self.isDict(gridDict):
-            raise TypeError('Grid coordinates must come wrapped in a dictionary.')
-
-        if not self.isEqual(len(gridDict), Limits.MAX_GRID_LENGTH.value):
-            raise RuntimeError("Grid coordinates must come in groups of four dictionaries: {'topLeft':{lat:float, long:float}, ... }!")
-
-        for key in gridDict:
-            if not self.isIn(key, gridDict):
-                raise RuntimeError('The ' + key + 'coordinate of the grid is missing!');
-
-    # A method that determines of four cooridate pairs actually represents a Grid.
-    def isGrid(self, gridDict):
-        self.__checkGridFormat(gridDict)
-        self.__checkCoordFormat(gridDict)
-        self.__checkCoordAlignment(gridDict)
         return True
+    
+    def __isRealLatitude(self, lat):
+        return self.isBetweenInc(lat, Degrees.MIN_LATITUDE.value, Degrees.MAX_LATITUDE.value)
+        
+    def __isRealLongitude(self, long):
+        return self.isBetweenInc(long, Degrees.MIN_LONGITUDE.value, Degrees.MAX_LONGITUDE.value)
+        
+    def isRealCoordinate(self, lat, long):
+        if not self.isFloat(lat):
+            lat = float(lat)
+            
+        if not self.isFloat(long):
+            long = float(long)
+        
+        return self.__isRealLatitude(lat) and self.__isRealLongitude(long)
+    
+    def areRealCoordinates(self, coordsDict):
+        results = [];
+        
+        for coord in coordsDict:
+            results.append(self.isRealCoordinate(coord['lat'], coord['long']))
 
-    def __isNorthOf(self, latitude, topLeft):
-        return self.isGreater(latitude, topLeft['lat'])
-
-    def __isSouthOf(self, latitude, botLeft):
-        return self.isLess(latitude, botLeft['lat'])
-
-    def __isEastOf(self, longitude, topRight):
-        return self.isGreater(longitude, topRight['long'])
-
-    def __isWestOf(self, longitude, topLeft):
-        return self.isLess(longitude, topLeft['long'])
-
-    def isOutsideGrid(self, latitude, longitude, topLeft, botLeft, topRight):
-        return (self.__isNorthOf(latitude, topLeft) or
-               self.__isSouthOf(latitude, botLeft) or
-               self.__isEastOf(longitude, topRight) or
-               self.__isWestOf(longitude, topLeft))
+        return results
