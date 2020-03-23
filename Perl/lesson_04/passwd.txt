@@ -1,0 +1,19 @@
+root:camel:0:1:Super-User:/:/sbin/sh
+daemon:alpaca:1:1::/:
+bin:bison:2:2::/usr/bin:
+sys:llama:3:3::/:
+adm:bison:4:4:Admin:/var/adm:
+lp:tiger:71:8:Line Printer Admin:/usr/spool/lp:
+uucp:lion:5:5:uucp Admin:/usr/lib/uucp:
+nuucp:terrier:9:9:uucp Admin:/var/spool/uucppublic:/usr/lib/uucp/uucico
+listen:camel:37:4:Network Admin:/usr/net/nls:
+sallyj:terrier:1004:200:Sally Jones:/export/home/sallyk:/bin/ksh
+nobody:tiger:60001:60001:Nobody:/:
+grstest:alpaca:1002:200:The Test Account:/export/home/grstest:/bin/ksh
+joeg:alpaca:1004:200:Joe Garfield:/export/home/joeg:/bin/ksh
+noaccess:terrier:60002:60002:No Access User:/:
+nobody4:alpaca:65534:65534:SunOS 4.x Nobody:/:
+grs:alpaca:1001:200::/export/home/grs:/bin/ksh
+wilmas:alpaca:1003:200:Wilma Smith:/export/home/wilmas:/bin/ksh
+joes:llama:1004:200:Joe Smith:/export/home/joes:/bin/ksh
+sallyk:bison:1004:200:Sally Klever:/export/home/sallyk:/bin/ksh

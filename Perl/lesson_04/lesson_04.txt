@@ -1,0 +1,222 @@
+Anthony E. Rutledge
+CIS 248
+Gary Seamans
+02/02/2007
+
+
+                             Lesson 4
+                        Chapters 7, 8, 9
+
+
+
+1.  What is a regular expression?
+
+	A regular expression is a template composed of syntactical
+	rules that examines strings for patterns that match (or
+        don't match) given parameters. They are used to gather
+        input, as conditions to selection and loop statements,
+        to alter lines of text or whole files, to create data
+        data structures, and provide a comprehensive way to work 
+        with strings from all input sources.   
+
+2.  What is a pattern matching character class? Give an example,
+    not from the book, and explain what it would match.
+
+	A pattern matching character class is a list of possible
+        characters inside square brackets. Only one of the characters
+        inside the square brackets needs to match for there to be
+        a match.
+
+        Example:  /[abc][xyz]/
+                  Find an "a", "b", or "c" followed by an x, y, or z.
+
+        Example:  /[a-f][g-p]/
+                  Find any letter "a" through "f" followed by
+                  any letter "g" through "p".
+
+3.  How would you put a [ inside of a pattern matching character
+    class?
+
+	In order to put an opening square bracket into a pattern
+	matching character class, I would put a backslash infront
+	of it.
+
+	Example:  /\[/          , Finds [
+
+
+4.  What is a negated character class? Give an example, not from
+    the book, and explain what it would match.
+
+	A negated character class is an expression that denotes
+	a pattern match by excluding specified targets. In other
+        words, it is a logical (boolean) "NOT" condition.
+
+	Example: /[^UPS]/    
+	Matches anything without capital U, P, or S.
+    
+5.  What would be another way of writing the following:
+    /[^0-9 \r\t\n\f]/  
+    
+    	/[\D\S]/
+
+
+6.  What regular expression would you use to match any social
+    security number that follows the form, ###-##-####? Were
+    # = a number in the range  0 - 9.
+
+
+	 I have two answers that I think would work.
+	
+	 Long method         /\d\d\d-\d\d-\d\d\d\d/     
+
+               AND
+
+	 Quantified method       /\d{3}-\d{2}-\d{4}/
+
+7.  Define the term "word" in reference to regular expressions?
+
+	In terms of regular expressions, a word is a sequence of 
+	characters that includes letters, numbers, and under-
+	scores. They are not words as we know them in English or 
+        any other language.
+
+8.  What are alternatives? Give an example not from the book.
+
+	In regular expressions, alternatives are logical "OR"
+ 	statements, represented by the vertical bar, or pipe
+	symbol ( | ). If the pattern on the left side of the
+	bar fails to match, the pattern on the right side of
+        the bar is checked.
+
+	Example:    /pizza|hamburger/
+	Example:    /0|1/
+	Example:    /\f|\r/
+	
+9.  Write a perl script, q9.pl, that will use the attached passwd.txt file
+    and print only the lines containing the "words" nobody, or grs.
+    
+    Technical constraints:
+
+    o Use the "use strict;" pragma
+    o Use a while loop to read in the lines from the file.
+    o Use alternatives to select lines containing nobody or
+      grs.
+
+    Hints:
+    
+    o You will need to combine both alternative and anchoring
+      patterns for a correct answer.
+
+	SEE q9.pl
+
+	This program will only return lines with "nobody" or "grs"
+        as stand alone words (not contained within other words).
+
+10. Write a perl script, q10.pl, that will search through the attached 
+    passwd.txt file and tracks the number of times each password
+    is used. (Note: The password is second field.) After processing
+    the file print each password and the number of times it was
+    encountered in the file.
+
+    Technical constraints:
+
+    o Use a hash to track the values
+    o Use a while loop to read the lines in the file
+      directly, not from STDIN. 
+      (Example invocation: q10.pl passwd.txt)
+    o The Output should look like:
+      
+	camel was encountered 2 times.
+	tiger was encountered 2 times.
+	terrier was encountered 3 times.
+	llama was encountered 2 times.
+	bison was encountered 3 times.
+	lion was encountered 1 times.
+	alpaca was encountered 6 times.
+
+    Hints:
+
+    o You can use the split command to separate out
+      the passwords. Remember that the colon, :, is
+      the delimiter in the password file.
+
+    o The password will be the key and the times encountered
+      will be the value.
+
+
+11.  Construct regular expressions that match:
+     
+     a. A word consisting of 3 to 6 a's followed by a single b:
+
+           /\ba{3,6}b\b/    
+
+                or
+
+           /\ba{3,6}b{1}/
+
+     b. The string tiger followed by 2 of any letter, followed by
+        the string lion, followed by the same two letters, reversed,
+	that followed tiger.
+
+           /tiger([a-zA-Z])([a-zA-Z])lion$2$1/
+
+     c. The word llama at the end of a line.
+  
+           /\bllama\b$/
+
+                or
+
+           /\bllama$/
+
+     d. The word llama at the beginning of a line.
+
+           /^\bllama\b/
+
+                or
+ 
+           /^llama\b/
+   
+
+12. Write a short perl script, q12.pl, that uses split and join to print
+    out the lines in the password file replacing the separator, ':' with
+    the pipe symbol, '|'.
+
+    Technical Constraints:
+
+    o Use the "use strict;" pragma
+
+    o Use split and join even though there may be other possible
+      solutions.
+
+	SEE q12.pl and comments at the bottom of the file.
+
+    
+13. Write a short perl script, q13.pl, that will substitute cheeta for all 
+    occurances of alpaca in the passwd.txt file.
+
+    Technical Constraints:
+    
+    o Use the "use strict;" pragma
+
+    o Display the results to the screen you do not have
+      to modify the file on disk.
+
+	SEE q13.pl
+
+14. Rewrite the following to eliminate the leaning toothpicks:
+    
+    /\/usr\/local\// 
+
+    	{/usr/local/}
+
+15. Write a short perl script, q15.pl,  to search through the 
+passwd.txt file and change all of the names, (the fifth field),
+to uppercase and display the results on the screen.
+
+   Technical constraints:
+
+   o Use the "use strict;" pragma
+   
+   o Don't use Unix/Dos system calls
+
+	SEE q15.pl
