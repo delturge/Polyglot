@@ -1,0 +1,155 @@
+Anthony E. Rutledge
+CIS 248
+Gary Seamans
+01/20/2007
+ 
+                         Lesson 2
+                      Chapters 3 & 4
+
+
+1.  What is a list ?
+
+	A list is an ordered collection of scalars. Each
+        element of a list is a separate scalar variable
+        with its own scalar value. Lists can have any
+        number of elements (or be empty).
+
+2.  What is an array ?
+
+	An array is a variable that contains a list. The
+	elements of an array are indexed by sequential integers
+        starting at zero. An array may have any number of 
+	elements (or have no elements).
+
+  
+3.  How do you represent the empty list ?
+
+	An empty list is represented by opening and closing
+        parenthesis with nothing between them ().
+
+4.  Assign the values "one", "two" and "three" to the variables
+    a, b, and c using a single statement.
+
+        I tried this many times with Perl 5.8.8 in FreeBSD 6.1
+        and it does not work. Then I downloaded and installed
+        perl from the class web site, and it worked in WinXP.
+
+	($a, $b, $c) = qw (one two three);
+
+5.  How would you print the following sentence using the 'fruitList'
+    list from question #6?
+
+    The list of fruit is: appleorangepearpeachgrape.
+
+    print "The list of fruit is: " @fruitList;
+
+6.  Show the command that will assign the words, "apple", "orange",
+    "pear", "peach", and "grape" to a list called 'fruitList'.
+
+        I tried this many times with Perl 5.8.8 in FreeBSD 6.1
+        and it does not work. Then I downloaded and installed
+        perl from the class web site, and it worked in WinXP.
+
+	  @fruitList = qw< apple orange pear peach grape >;
+
+7.  Swap the values of variables a and c from question #4 using
+    a single statement.
+
+	  ($a, $c) = ($c, $a);
+
+8.  Write a Perl script that reads in a list of strings on separate
+    lines, from <STDIN>, sorts the list, and then prints the list in 
+    sorted order and in reverse sorted order.
+
+	  SEE q8.pl
+
+9.  How would you access the third element of an array called "myArray"?
+
+          $myArray[3];
+
+10. How would you assign a slice of the array "myArray" consisting of
+    the 3rd through 5th elements to the array "mySlice"?
+
+          @mySlice = @myArray[3..5];
+
+11.  Write a Perl script called q11.pl that:
+    
+    o Prompts the user to enter two negative numbers.
+
+    o Prints an error message if either of the two 
+      numbers is greater than -1
+
+    o Calculates and prints the sum of the two numbers.
+
+    
+    
+    Technical constraints:
+    
+    o Use the "strict" pragma
+
+    o Use a subroutine that calculates and 
+      returns the sum of the two numbers.
+
+    o Pass both of the numbers input by the
+      user to the subroutine as parameters.
+
+    o Use the return value from the subroutine
+      call to print the sum of the numbers.
+
+          SEE q11.pl
+
+12. What is @_ , what does it contain, and when is it used?
+
+	  The character combination, @_, is a special array 
+          variable whichs holds the parameter list of a
+          subroutine. Subroutines access this array to determine
+          the number of argument that have been passed to it,
+          and the values of those arguments.
+
+13.  Write a Perl script called q13.pl that:
+
+    o Prompts the user to enter a number between 3 and 11
+      inclusive or "quit" to quit. The user will be
+      re-prompted after each entry unless they enter "quit".
+    o Prints: "<num> is out of range" if the user enters a
+      a number outside of the range 3-11.
+    o Prints: "<num> is in range" if the user enters a
+      number in the range.
+
+    Technical constraints:
+
+    o Use the "strict" pragma
+
+    o Use a while loop to keep the program going until the user
+      enters "quit".
+    o Use an if/else statement to print the in/out of range messages.
+
+    Hints:
+
+    o Review table 2-2 on page 32.
+    o Review table 2-3 on page 33, let me know if you have any questions.
+    o Don't forget that when you read something in from <STDIN> it
+      still contains a newline, '\n', character at the end.
+    o Read the "do_while.html" under "Course Documents"
+
+          SEE q13.pl
+
+14.  Repeat question 13, call it q14.pl, except using a do/while loop.
+
+          SEE q14.pl
+
+15.  Create an array containing the numbers 5 - 15 using the push operator. Print the array using the shift operator, the pop operator, and a foreach loop.
+
+    Technical constraints:
+    
+    o Use separate subroutines to create the array and for each of the
+      print requirements.
+
+    Hints: 
+     o You will need to use a temporary variable to hold the array or you may 
+       need to recreate the array after printing with the shift/pop operators.
+
+     o Here is a program that will create an array and print its contents using
+     for loops:
+
+         SEE q15.pl
