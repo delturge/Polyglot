@@ -18,14 +18,14 @@
 print "\n                Welcome to List Sorter!\n\n\n";
 print "Hit enter after each item.\n(Hit Enter By Itself To Quit): \n\n";      #Prompt
 
-chomp ($sentinel = <STDIN>);                   #Priming the loop.           
+chomp ($sentinel = <STDIN>);                  #Priming the loop.           
 
-while ( $sentinel ne "") {                     #Gather legitimate elements
-	push  (@unsorted_List, $sentinel);
-	chomp ($sentinel = <STDIN>);
-	}
+while ($sentinel ne "") {                     #Gather legitimate elements
+    push  (@unsorted_List, $sentinel);
+    chomp ($sentinel = <STDIN>);
+}
 
-@sorted_List = sort @unsorted_List;            #Sort and store
+@sorted_List = sort @unsorted_List;           #Sort and store
 
 print "@sorted_List\n\n";	
 	
