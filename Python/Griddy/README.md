@@ -3,8 +3,8 @@ Class Families:
 Grid
 ====
 
-1.Grid.py
-2.GeoGrid.py
+1. Grid.py
+2. GeoGrid.py
 
 Validators
 ==========
