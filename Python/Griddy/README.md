@@ -1,3 +1,18 @@
+What is Griddy?
+===============
+
+Griddy is a geocoding program.
+
+https://pypi.org/project/geocoder/
+https://en.wikipedia.org/wiki/Geocoding
+
+It takes real world locations and determines if they fall
+inside a set of four latitude and longitude coordinates (a grid square).
+
+Griddy gets its input from text files:
+1. addresses1.txt
+2. addresses2.txt
+
 Class Families:
 
 Grid
