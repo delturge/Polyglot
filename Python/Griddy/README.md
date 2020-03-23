@@ -9,10 +9,14 @@ Grid
 Validators
 ==========
 
+Branch 1
+
 1. Validator.py
 2. CoordinateValidator.py (uses Degrees.py, Limits.py)
 3. GridValidator.py       (uses Limits.py)
 3. GeocoderValidator.py
+
+Branch 2
 
 1. Validator.py
 2. FileValidator.py
