@@ -1,0 +1,132 @@
+Anthony E. Rutledge
+CIS 248
+Gary Seamans
+02/08/2007
+
+
+                            Lesson 5
+			   Chapter 10
+
+	
+
+	o The telData.txt file is attached and the fields
+        are:
+
+|<last name>|<first name>|<emp number>|<hourly wage>|<city>|
+   <state>|<area code>|<telephone number>
+
+(Note: The above is all on one line. The pipe symbol is a fairly common delimiter, but in perl regular expressions it also has special meaning
+so it will need to be escaped.)
+
+1.  In an if control structure the block of code following the 
+    if is only executed when the conditional expression is ______.
+
+
+	true 
+
+   
+2.  Write an expression using the Ternary operator that will return
+    the larger of two integer variables $intOne and $intTwo and 
+    assign it to $largestNumber.
+
+
+       $largestNumber = ($intOne > $intTwo) ? $intOne : $intTwo;
+
+
+3.  List two short circuit operators and give one example, not
+    from the book, for each operator.
+
+	
+	Two very helpful short circuit operators are the logical
+        "AND" (&&) and the logical "OR" (||).
+
+	Example:
+
+		if ($Anthony > 99 && $Anthony > $Average_Bear)
+			print "Hey, Boo-boo! Perl is awesome!";
+
+		if ($Vista < $FreeBSD || $Vista < MacOS_X)
+			print "Stop trying to re-invent the wheel Bill!";
+
+ 
+4.  Write a short perl script, q4.pl, that prints out the first name and
+    last name of each employee in the telData.txt file whose employee
+    number is greater than 200.
+
+Technical constraints:
+
+	  o Use the "use strict;" pragma
+	  o Use meaningful names for variable names.
+	  o Use the unless control structure to determine
+            which lines to print.
+	     
+	SEE q4.pl
+
+5.  Write a short perl script, q5.pl, that will prompt the user to 
+    enter a last name and will search the telData.txt file until the
+    first instance of that name is encountered. The script will then
+    print the line containing that last name.
+
+Technical constraints:
+
+	  o Use the "use strict;" pragma
+	  o Use the until control structure
+	  o Use meaningful names for variable names
+    
+       SEE q5.pl
+
+
+6.  Write a short perl script, q6.pl, that will print out the 
+    first name, last name, and wage for each employee in the
+    telData.txt file that makes more than $25 per hour.
+
+Technical constraints:
+
+	  o Use the "use strict;" pragma
+	  o Use expression modifiers to print the
+	    the lines.
+
+
+	SEE q6.pl
+
+7.  Describe the differences between the last, next and redo
+    operators.
+
+	The "last" operator is used when you want to break out
+        of the innermost loop. You might use this after 
+        executing a line of code that meets a certain condition or
+        makes continuation of the loop pointless or undesireable.
+
+	The "next" operator might be used in a situation similar
+        to where the "last" operator would, except that instead of
+        terminating the loop, the next iteration of the loop occurs.
+        
+	The "redo" operator is similar to the "next" operator, but
+        it dose not advance the loop to its next iteration. Instead,
+        it behaves like instant replay. It runs the body of the loop
+        again, without re-testing any control expression for the loop.
+
+
+8. Write a short perl script, q8.pl, that will print the first name,
+   last name, and employee number for employees in the telData.txt
+   file whose state is AZ and whose employee number is greater 
+   than 200, or whose area code is 703.
+
+
+   Technical constraints:
+
+   o Use the "Use strict pragma"
+   o Use a single if test and logical && and || operators
+     to determine which lines to print.
+ 	
+	SEE q8.pl
+
+   Hints:
+
+   o Use a loop and do one line at a time.
+   o Split each line so you can use each of the individual
+     fields in the if test.
+   o Read the wording of the problem carefully to determine
+     where to use the && and || operators.
+   o Don't hesitate to use ( ) for grouping if it makes it
+     easier for you to understand.
