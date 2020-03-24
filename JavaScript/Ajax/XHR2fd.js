@@ -8,7 +8,7 @@ if (!this.isUndefined(info.anthonyerutledge.objects.XHR2fd)) {
 
 /***************************************************************************/
 
-/* XHR2 extends Ajax */
+/* XHR2fd extends XHR2 */
 info.anthonyerutledge.objects.XHR2fd = function(xhr, method, url, prefer, acceptMediaType, requestContentType, responseContentType, formValues) {
     info.anthonyerutledge.objects.XH2.call(this, xhr, method, url, prefer, acceptMediaType, requestContentType, responseContentType, null);
     this.formData = this.getFormData(formValues);
